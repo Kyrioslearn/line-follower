@@ -279,15 +279,40 @@ async function compileAndUpload(){
   const SERVER='http://127.0.0.1:3456';
 
   // Step 1: check server is running
-  ll('Checking local compile server...','info');
+  ll('Checking KyriosLearn Agent...','info');
+  let pingData = null;
   try{
-    await fetch(SERVER+'/ping');
+    const pingRes = await fetch(SERVER+'/ping');
+    pingData = await pingRes.json();
   }catch(e){
     stat.className='compile-status error';
-    stat.textContent='✗ Compile server not running';
-    ll('✗ Could not reach http://127.0.0.1:3456','error');
-    ll('→ Run START_SERVER.bat on your PC first!','warn');
-    ll('→ Keep it running in the background while you use this tool.','warn');
+    stat.textContent='⚠ Agent not running';
+    logArea.innerHTML='';
+    logArea.innerHTML += '<div style="background:#1a1a2e;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:8px 0;color:#f8f8f2">' +
+      '<div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px">⚡ KyriosLearn Agent Required</div>' +
+      '<div style="font-size:12px;color:#ccc;margin-bottom:12px">The Agent runs on your PC and compiles Arduino sketches. It only takes a minute to set up.</div>' +
+      '<div style="font-size:12px;margin-bottom:6px"><b style="color:#a78bfa">Step 1:</b> Download the Agent files (ZIP)</div>' +
+      '<div style="font-size:12px;margin-bottom:6px"><b style="color:#a78bfa">Step 2:</b> Extract and double-click <code style="background:#333;padding:2px 5px;border-radius:3px">KyriosLearn-Agent.bat</code></div>' +
+      '<div style="font-size:12px;margin-bottom:14px"><b style="color:#a78bfa">Step 3:</b> Come back here and click Compile again</div>' +
+      '<a href="https://github.com/kyrioslearn/line-follower/releases/latest/download/KyriosLearn-Agent.zip" ' +
+      'style="display:inline-block;background:#7c3aed;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600">⬇ Download KyriosLearn Agent</a>' +
+      '</div>';
+    return;
+  }
+  // Check if still setting up
+  if(pingData && pingData.status === 'setting_up'){
+    stat.className='compile-status compiling';
+    stat.textContent='⏳ Agent is setting up...';
+    ll('Agent is still downloading arduino-cli / AVR core.','warn');
+    ll('This only happens once. Wait a minute and try again.','info');
+    if(pingData.log) pingData.log.forEach(l=>ll(l,'info'));
+    return;
+  }
+  if(pingData && pingData.status === 'error'){
+    stat.className='compile-status error';
+    stat.textContent='✗ Agent setup failed';
+    ll('Agent error: '+(pingData.error||'unknown'),'error');
+    ll('Try closing and restarting KyriosLearn-Agent.bat','warn');
     return;
   }
 
