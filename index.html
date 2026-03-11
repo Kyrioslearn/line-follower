@@ -83,9 +83,10 @@ select:focus{border-color:var(--accent);}
 .btn-flash.done{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.2);}
 .btn-flash.fail{border-color:var(--red);color:var(--red);}
 @keyframes fpulse{from{box-shadow:0 0 0 rgba(255,215,0,0)}to{box-shadow:0 0 14px rgba(255,215,0,.4)}}
-pre{padding:14px;font-family:var(--mono);font-size:10.5px;line-height:1.8;color:#8fa8cc;overflow-x:auto;max-height:55vh;overflow-y:auto;background:var(--bg);}
-pre::-webkit-scrollbar{width:4px;height:4px;}
-pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+#codeOut{display:block;width:100%;padding:14px;font-family:var(--mono);font-size:10.5px;line-height:1.8;color:#8fa8cc;overflow-x:auto;max-height:55vh;overflow-y:auto;background:var(--bg);border:none;outline:none;resize:none;white-space:pre;tab-size:2;caret-color:var(--accent);}
+#codeOut:focus{background:#06090f;}
+#codeOut::-webkit-scrollbar{width:4px;height:4px;}
+#codeOut::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 .prog-wrap{height:2px;background:var(--border);overflow:hidden;display:none;}
 .prog-wrap.on{display:block;}
 .prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .15s;}
@@ -231,6 +232,7 @@ pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
       <button class="btn btn-dl" onclick="downloadCode()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
       </button>
+      <button class="btn" style="background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);" onclick="generate()" title="Discard edits and regenerate from settings">↺ Reset</button>
     </div>
   </div>
   <div class="ct">
@@ -240,7 +242,7 @@ pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
       <span id="flashLabel">Compile &amp; Flash</span>
     </button>
   </div>
-  <pre id="codeOut"></pre>
+  <textarea id="codeOut" spellcheck="false" autocorrect="off" autocapitalize="off" oninput="onCodeEdit()"></textarea>
   <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
   <div class="flash-log" id="flashLog"></div>
   <div class="sb">
@@ -696,15 +698,25 @@ function v(id) { return document.getElementById(id).value; }
 function syncN(n, r) { document.getElementById(n).value = document.getElementById(r).value; }
 function syncR(n, r) { document.getElementById(r).value = document.getElementById(n).value; }
 
-function generate() {
+function updateStats(code) {
+  document.getElementById('lc').textContent = code.split('\n').length;
+  document.getElementById('bc').textContent = new Blob([code]).size;
+}
+
+function onCodeEdit() {
+  // Update stats live as user edits; don't overwrite with generated code
+  updateStats(document.getElementById('codeOut').value);
+}
+
+
   const pSL = v('pinSL'), pSR = v('pinSR'), pVL = v('pinVL'), pVR = v('pinVR');
   const bs = v('bs'), ss = v('ss'), kp = v('kp'), ki = v('ki'), kd = v('kd');
   const code = S.mode === 'calib'
     ? getCalibSketch(pSL, pSR, pVL, pVR, bs, ss, kp, ki, kd)
     : getSimpleSketch(pSL, pSR, pVL, pVR, bs, ss, kp, ki, kd);
-  document.getElementById('codeOut').textContent = code;
-  document.getElementById('lc').textContent = code.split('\n').length;
-  document.getElementById('bc').textContent = new Blob([code]).size;
+  const el = document.getElementById('codeOut');
+  el.value = code;
+  updateStats(code);
   document.getElementById('modeLabel').textContent = S.mode;
 }
 
@@ -722,7 +734,7 @@ function setMode(m) {
 }
 
 function copyCode() {
-  navigator.clipboard.writeText(document.getElementById('codeOut').textContent).then(() => {
+  navigator.clipboard.writeText(document.getElementById('codeOut').value).then(() => {
     const b = document.getElementById('copyBtn');
     b.textContent = '✓ Copied!'; b.classList.add('copied');
     setTimeout(() => { b.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`; b.classList.remove('copied'); }, 2000);
@@ -730,7 +742,7 @@ function copyCode() {
 }
 
 function downloadCode() {
-  const blob = new Blob([document.getElementById('codeOut').textContent], { type: 'text/plain' });
+  const blob = new Blob([document.getElementById('codeOut').value], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `line_follower_${S.mode}.ino`;
@@ -813,7 +825,7 @@ async function getSync() {
 }
 
 async function doFlash() {
-  const code = document.getElementById('codeOut').textContent;
+  const code = document.getElementById('codeOut').value;
   const btn  = document.getElementById('flashBtn');
   const lbl  = document.getElementById('flashLabel');
   const flog_el = document.getElementById('flashLog');
