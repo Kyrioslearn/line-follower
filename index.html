@@ -276,30 +276,41 @@ async function compileAndUpload(){
   ll('Sending to Arduino Cloud compiler...','info');
 
   const code=document.getElementById('codeOutput').textContent;
+  const SERVER='http://127.0.0.1:3456';
+
+  // Step 1: check server is running
+  ll('Checking local compile server...','info');
   try{
-    const res=await fetch('https://builder.arduino.cc/v3/compile',{
+    await fetch(SERVER+'/ping');
+  }catch(e){
+    stat.className='compile-status error';
+    stat.textContent='✗ Compile server not running';
+    ll('✗ Could not reach http://127.0.0.1:3456','error');
+    ll('→ Run START_SERVER.bat on your PC first!','warn');
+    ll('→ Keep it running in the background while you use this tool.','warn');
+    return;
+  }
+
+  // Step 2: compile
+  ll('Sending sketch to local compiler...','info');
+  try{
+    const res=await fetch(SERVER+'/compile',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        sketch:{name:'line_follower',files:[{name:'line_follower.ino',content:code}]},
-        board:{fqbn:'arduino:avr:uno'},
-        libraries:[]
-      })
+      body:JSON.stringify({sketch:code})
     });
+    const data=await res.json();
     if(!res.ok){
-      const t=await res.text();
       stat.className='compile-status error';
-      stat.textContent='✗ Compile failed ('+res.status+')';
-      ll(t.substring(0,400),'error');
+      stat.textContent='✗ Compile failed';
+      ll(data.details||data.error||'Unknown error','error');
       return;
     }
-    const data=await res.json();
-    const hex=data.hex||data.data;
-    if(!hex){stat.className='compile-status error';stat.textContent='✗ No hex returned';ll('Keys: '+Object.keys(data).join(', '),'warn');return;}
+    const hex=data.hex;
+    if(!hex){stat.className='compile-status error';stat.textContent='✗ No hex returned';return;}
     ll('✓ Compiled! '+hex.length+' bytes','ok');
     stat.className='compile-status ok';
     stat.textContent='✓ Ready — click Flash to upload';
-    // Create blob URL and attach to flash button
     if(hexBlobUrl)URL.revokeObjectURL(hexBlobUrl);
     hexBlobUrl=URL.createObjectURL(new Blob([hex],{type:'text/plain'}));
     flashBtn.setAttribute('hex-href',hexBlobUrl);
