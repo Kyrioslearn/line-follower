@@ -4,409 +4,1133 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Line Follower Generator — KyriosLearn Africa</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://github.com/dbuezas/arduino-web-uploader/releases/download/v1.1.2/main.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0e1a;--panel:#0f1525;--panel2:#141b2e;--border:#1e2d4a;--accent:#00d4ff;--accent2:#ff6b35;--accent3:#39ff14;--text:#e2e8f0;--muted:#64748b;--red:#ff4444;--yellow:#ffd700;}
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
-  .container{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:0 20px 60px;}
-  header{padding:24px 0 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;}
-  .logo{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),#0066ff);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-  .header-text h1{font-size:19px;font-weight:800;color:white;letter-spacing:-0.5px;}
-  .header-text p{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
-  .webserial-badge{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 14px;}
-  .webserial-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);box-shadow:0 0 6px var(--accent3);animation:pulse 2s infinite;}
-  .webserial-badge span{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent3);}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  .layout{display:grid;grid-template-columns:370px 1fr;gap:18px;align-items:start;}
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-  .panel-header{padding:13px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--panel2);}
-  .panel-header .dot{width:8px;height:8px;border-radius:50%;}
-  .panel-header h2{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-  .panel-body{padding:16px;}
-  .section{margin-bottom:22px;}
-  .section-title{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:11px;display:flex;align-items:center;gap:8px;}
-  .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
-  .control-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:9px;}
-  .control-label{font-size:12px;color:var(--text);flex:1;min-width:0;}
-  .control-label small{display:block;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:1px;}
-  .control-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-  input[type="number"]{width:66px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:4px 8px;text-align:center;outline:none;transition:border-color 0.2s;}
-  input[type="number"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,0.1);}
-  input[type="range"]{-webkit-appearance:none;width:100px;height:4px;background:var(--border);border-radius:2px;outline:none;}
-  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(0,212,255,0.5);}
-  select{background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;padding:5px 8px;outline:none;cursor:pointer;transition:border-color 0.2s;width:100%;}
-  select:focus{border-color:var(--accent);}
-  .toggle-group{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
-  .toggle-btn{flex:1;padding:5px 9px;font-family:'JetBrains Mono',monospace;font-size:11px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
-  .toggle-btn.active{background:var(--accent);color:var(--bg);font-weight:700;}
-  .pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-  .pin-item label{display:block;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:3px;}
-  .pin-item select{font-family:'JetBrains Mono',monospace;font-size:12px;}
-  .code-panel{position:sticky;top:14px;}
-  .code-toolbar{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;background:var(--panel2);flex-wrap:wrap;}
-  .filename{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);flex:1;min-width:100px;}
-  .filename span{color:var(--accent2);}
-  .btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:7px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
-  .btn-copy{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.3);}
-  .btn-copy:hover{background:var(--accent);color:var(--bg);}
-  .btn-copy.copied{background:var(--accent3);color:var(--bg);border-color:var(--accent3);}
-  .btn-download{background:rgba(255,107,53,0.1);color:var(--accent2);border:1px solid rgba(255,107,53,0.3);}
-  .btn-download:hover{background:var(--accent2);color:white;}
-  .btn-upload{background:rgba(57,255,20,0.1);color:var(--accent3);border:1px solid rgba(57,255,20,0.3);}
-  .btn-upload:hover:not(:disabled){background:var(--accent3);color:var(--bg);}
-  .btn-upload:disabled{opacity:0.35;cursor:not-allowed;}
-  pre{padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:#a8b8d8;overflow-x:auto;max-height:58vh;overflow-y:auto;background:var(--bg);}
-  pre::-webkit-scrollbar{width:5px;height:5px;}
-  pre::-webkit-scrollbar-track{background:var(--panel);}
-  pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-  .compile-bar{padding:12px 16px;border-top:1px solid var(--border);background:#080d1a;display:none;flex-direction:column;gap:10px;}
-  .compile-bar.visible{display:flex;}
-  .compile-status{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted);}
-  .compile-status.compiling{color:var(--yellow);}
-  .compile-status.ok{color:var(--accent3);}
-  .compile-status.error{color:var(--red);}
-  .log-area{font-size:11px;font-family:'JetBrains Mono',monospace;line-height:2;max-height:120px;overflow-y:auto;}
-  .log-area::-webkit-scrollbar{width:4px;}
-  .log-area::-webkit-scrollbar-thumb{background:var(--border);}
-  .ll{color:var(--muted);}
-  .ll.info{color:var(--accent);}
-  .ll.ok{color:var(--accent3);}
-  .ll.error{color:var(--red);}
-  .ll.warn{color:var(--yellow);}
-  #flashBtn{display:none;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;background:var(--accent3);color:var(--bg);border:none;cursor:pointer;transition:all 0.2s;width:fit-content;}
-  #flashBtn:hover{opacity:0.85;}
-  #flashBtn .upload-progress{font-size:10px;margin-left:4px;}
-  .stats-bar{display:flex;gap:12px;padding:9px 16px;border-top:1px solid var(--border);background:var(--panel2);flex-wrap:wrap;align-items:center;}
-  .stat{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);}
-  .stat-dot{width:5px;height:5px;border-radius:50%;background:var(--accent3);animation:pulse 2s infinite;}
-  .info-note{background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:18px;}
-  .info-note strong{color:var(--accent);}
-  @media(max-width:900px){.layout{grid-template-columns:1fr;}.code-panel{position:static;}.webserial-badge{margin-left:0;width:100%;}}
+:root{
+  --bg:#080c14;--panel:#0d1320;--panel2:#111928;--border:#192236;
+  --accent:#00d4ff;--accent2:#ff6b35;--green:#39ff14;--red:#ff3355;
+  --yellow:#ffd700;--purple:#a78bfa;--text:#dde4f0;--muted:#4a5568;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:0 18px 60px;}
+
+/* HEADER */
+header{padding:18px 0 22px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap;}
+.logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),#0055ff);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hd h1{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px;}
+.hd p{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.ws-badge{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 13px;cursor:pointer;transition:border-color .2s;}
+.ws-badge:hover{border-color:var(--accent);}
+.ws-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
+.ws-badge.connected .dot{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.ws-badge.disconnected .dot{background:var(--red);animation:none;}
+.ws-badge span{font-size:11px;font-family:var(--mono);color:var(--green);}
+.ws-badge.connected span{color:var(--accent);}
+.ws-badge.disconnected span{color:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:340px 1fr 340px;gap:16px;align-items:start;}
+@media(max-width:1200px){.layout{grid-template-columns:300px 1fr;}}
+@media(max-width:800px){.layout{grid-template-columns:1fr;}}
+
+/* PANELS */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.ph{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--panel2);}
+.ph .pdot{width:7px;height:7px;border-radius:50%;}
+.ph h2{font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);}
+.ph .ph-actions{margin-left:auto;display:flex;gap:6px;}
+.pb{padding:14px;}
+
+/* FORM */
+.sec{margin-bottom:20px;}
+.st{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.st::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.cr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+.cl{font-size:12px;color:var(--text);flex:1;}
+.cl small{display:block;font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
+.cright{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+input[type=number]{width:64px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:700;padding:4px 7px;text-align:center;outline:none;transition:border-color .2s;}
+input[type=number]:focus{border-color:var(--accent);}
+input[type=range]{-webkit-appearance:none;width:95px;height:3px;background:var(--border);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;}
+select{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 7px;outline:none;cursor:pointer;width:100%;}
+select:focus{border-color:var(--accent);}
+.tg{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.tb{flex:1;padding:4px 8px;font-family:var(--mono);font-size:10px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tb.active{background:var(--accent);color:var(--bg);font-weight:700;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.pgrid label{display:block;font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px;letter-spacing:.5px;}
+
+/* CODE PANEL */
+.code-panel{position:sticky;top:14px;}
+.ct{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;background:var(--panel2);flex-wrap:wrap;}
+.fname{font-family:var(--mono);font-size:10px;color:var(--muted);flex:1;}
+.fname span{color:var(--accent2);}
+.btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;font-family:var(--sans);font-size:10px;font-weight:600;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-copy{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.25);}
+.btn-copy:hover{background:var(--accent);color:var(--bg);}
+.btn-copy.copied{background:var(--green);color:var(--bg);}
+.btn-dl{background:rgba(255,107,53,.1);color:var(--accent2);border:1px solid rgba(255,107,53,.25);}
+.btn-dl:hover{background:var(--accent2);color:#fff;}
+.btn-flash{background:rgba(57,255,20,.1);color:var(--green);border:1px solid rgba(57,255,20,.25);}
+.btn-flash:hover:not(:disabled){background:var(--green);color:var(--bg);}
+.btn-flash:disabled{opacity:.3;cursor:not-allowed;}
+.btn-flash.flashing{border-color:var(--yellow);color:var(--yellow);animation:fpulse .7s ease-in-out infinite alternate;}
+.btn-flash.done{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.2);}
+.btn-flash.fail{border-color:var(--red);color:var(--red);}
+@keyframes fpulse{from{box-shadow:0 0 0 rgba(255,215,0,0)}to{box-shadow:0 0 14px rgba(255,215,0,.4)}}
+pre{padding:14px;font-family:var(--mono);font-size:10.5px;line-height:1.8;color:#8fa8cc;overflow-x:auto;max-height:55vh;overflow-y:auto;background:var(--bg);}
+pre::-webkit-scrollbar{width:4px;height:4px;}
+pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.prog-wrap{height:2px;background:var(--border);overflow:hidden;display:none;}
+.prog-wrap.on{display:block;}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .15s;}
+.flash-log{padding:10px 14px;font-size:10px;font-family:var(--mono);line-height:1.9;max-height:90px;overflow-y:auto;background:#060a10;display:none;}
+.flash-log.on{display:block;}
+.flash-log::-webkit-scrollbar{width:3px;}
+.flash-log::-webkit-scrollbar-thumb{background:var(--border);}
+.fl{color:var(--muted);}
+.fl.ok{color:var(--green);}
+.fl.err{color:var(--red);}
+.fl.info{color:var(--accent);}
+.fl.warn{color:var(--yellow);}
+.sb{display:flex;gap:10px;padding:8px 14px;border-top:1px solid var(--border);background:var(--panel2);flex-wrap:wrap;}
+.si{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:blink 2s infinite;}
+
+/* SERIAL MONITOR */
+.sm-panel{position:sticky;top:14px;display:flex;flex-direction:column;}
+.sm-out{height:320px;background:#040810;overflow-y:auto;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7;}
+.sm-out::-webkit-scrollbar{width:4px;}
+.sm-out::-webkit-scrollbar-thumb{background:var(--border);}
+.sm-line{color:#6b8caa;border-bottom:1px solid rgba(255,255,255,.03);padding:1px 0;}
+.sm-line.rx{color:#a8c8e8;}
+.sm-line.tx{color:var(--yellow);}
+.sm-line.sys{color:var(--purple);font-style:italic;}
+.sm-line.ok{color:var(--green);}
+.sm-line.err{color:var(--red);}
+.sm-input-row{display:flex;gap:0;border-top:1px solid var(--border);}
+.sm-input-row input{flex:1;background:var(--bg);border:none;color:var(--accent);font-family:var(--mono);font-size:11px;padding:9px 12px;outline:none;}
+.sm-input-row input::placeholder{color:var(--muted);}
+.sm-send{background:var(--panel2);border:none;border-left:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:10px;padding:9px 14px;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.sm-send:hover{background:var(--accent);color:var(--bg);}
+.sm-toolbar{padding:8px 12px;border-top:1px solid var(--border);background:var(--panel2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sm-toolbar select{width:auto;font-size:10px;padding:3px 6px;}
+.sm-toolbar label{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;}
+.sm-toolbar input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
+.sm-count{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--muted);}
+.sm-clear{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;}
+.sm-clear:hover{border-color:var(--red);color:var(--red);}
+.conn-btn{background:transparent;border:1px solid var(--green);color:var(--green);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:5px;cursor:pointer;transition:all .15s;}
+.conn-btn:hover{background:var(--green);color:var(--bg);}
+.conn-btn.disc{border-color:var(--red);color:var(--red);}
+.conn-btn.disc:hover{background:var(--red);color:#fff;}
+
+@media(max-width:1200px){.sm-panel{position:static;grid-column:1/-1;}.sm-out{height:200px;}}
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
 <header>
   <div class="logo">🤖</div>
-  <div class="header-text">
+  <div class="hd">
     <h1>Line Follower Generator</h1>
-    <p>KyriosLearn Africa · SafariSTEM Platform · kyrioslearn.github.io</p>
+    <p>KyriosLearn Africa · SafariSTEM · Direct AVR Flash via Web Serial</p>
   </div>
-  <div class="webserial-badge">
+  <div class="ws-badge" id="wsBadge" onclick="toggleSerialConnect()">
     <div class="dot"></div>
-    <span id="wsLabel">Web Serial ready</span>
+    <span id="wsLabel">Click to connect Arduino</span>
   </div>
 </header>
 
-<div class="info-note">
-  <strong>Zero installs.</strong> Configure your sketch → click <em>Compile &amp; Upload</em> → Chrome asks for your COM port → done.
-  Requires Chrome on Windows/Mac/Linux. Arduino must be plugged in via USB.
-</div>
-
 <div class="layout">
 
-  <div class="panel">
-    <div class="panel-header"><div class="dot" style="background:#00d4ff"></div><h2>Configuration</h2></div>
-    <div class="panel-body">
+<!-- ── LEFT: CONFIG ─────────────────────────────────────────── -->
+<div class="panel">
+  <div class="ph"><div class="pdot" style="background:var(--accent)"></div><h2>Configuration</h2></div>
+  <div class="pb">
 
-      <div class="section">
-        <div class="section-title">Control Mode</div>
-        <div class="toggle-group">
-          <button class="toggle-btn active" onclick="setMode('pid')">PID Control</button>
-          <button class="toggle-btn" onclick="setMode('simple')">Simple On/Off</button>
-        </div>
+    <div class="sec">
+      <div class="st">Sketch Mode</div>
+      <div class="tg">
+        <button class="tb active" onclick="setMode('calib')">Calibration Wizard</button>
+        <button class="tb" onclick="setMode('simple')">Simple PID</button>
       </div>
-
-      <div class="section">
-        <div class="section-title">Sensor Type</div>
-        <div class="toggle-group" style="margin-bottom:10px;">
-          <button class="toggle-btn active" onclick="setSensor('digital')">Digital (DOUT)</button>
-          <button class="toggle-btn" onclick="setSensor('analog')">Analog (AOUT)</button>
-        </div>
-        <div class="control-row">
-          <div class="control-label">Line Signal<small>What value = line detected?</small></div>
-          <div class="toggle-group">
-            <button class="toggle-btn" onclick="setLogic('low')">LOW</button>
-            <button class="toggle-btn active" onclick="setLogic('high')">HIGH</button>
-          </div>
-        </div>
+      <div style="margin-top:8px;padding:8px 10px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);border-radius:6px;font-size:10px;color:var(--muted);font-family:var(--mono);line-height:1.7;" id="modeNote">
+        Interactive calibration via Serial Monitor. Reads white/black values, runs 5 PID test attempts, locks in best settings.
       </div>
-
-      <div class="section">
-        <div class="section-title">Pin Assignment</div>
-        <div class="pin-grid">
-          <div class="pin-item"><label>LEFT SENSOR</label>
-            <select id="pinSensorLeft" onchange="generate()"><option>A0</option><option>A1</option><option>A2</option><option>A3</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
-          <div class="pin-item"><label>RIGHT SENSOR</label>
-            <select id="pinSensorRight" onchange="generate()"><option>A0</option><option>A1</option><option>A2</option><option>A3</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select></div>
-          <div class="pin-item"><label>LEFT SERVO</label>
-            <select id="pinServoLeft" onchange="generate()"><option selected>9</option><option>10</option><option>11</option><option>3</option><option>5</option><option>6</option></select></div>
-          <div class="pin-item"><label>RIGHT SERVO</label>
-            <select id="pinServoRight" onchange="generate()"><option>9</option><option selected>10</option><option>11</option><option>3</option><option>5</option><option>6</option></select></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Speed & Servo</div>
-        <div class="control-row">
-          <div class="control-label">Base Speed<small>0=stop · 200=full</small></div>
-          <div class="control-right">
-            <input type="range" id="baseSpeedRange" min="50" max="200" value="120" oninput="syncNum('baseSpeed','baseSpeedRange');generate()">
-            <input type="number" id="baseSpeed" value="120" min="50" max="200" oninput="syncRange('baseSpeed','baseSpeedRange');generate()">
-          </div>
-        </div>
-        <div class="control-row">
-          <div class="control-label">Servo Stop µs<small>Neutral pulse width</small></div>
-          <div class="control-right"><input type="number" id="servoStop" value="1500" min="1400" max="1600" oninput="generate()"></div>
-        </div>
-        <div class="control-row">
-          <div class="control-label">Startup Delay (s)<small>Time to place robot</small></div>
-          <div class="control-right"><input type="number" id="startDelay" value="3" min="1" max="10" oninput="generate()"></div>
-        </div>
-      </div>
-
-      <div class="section" id="pidSection">
-        <div class="section-title">PID Gains</div>
-        <div class="control-row">
-          <div class="control-label">Kp — Proportional<small>Steering strength</small></div>
-          <div class="control-right">
-            <input type="range" id="kpRange" min="0" max="80" step="0.5" value="30" oninput="syncNum('kp','kpRange');generate()">
-            <input type="number" id="kp" value="30" min="0" max="80" step="0.5" oninput="syncRange('kp','kpRange');generate()">
-          </div>
-        </div>
-        <div class="control-row">
-          <div class="control-label">Ki — Integral<small>Drift correction</small></div>
-          <div class="control-right">
-            <input type="range" id="kiRange" min="0" max="5" step="0.1" value="0.5" oninput="syncNum('ki','kiRange');generate()">
-            <input type="number" id="ki" value="0.5" min="0" max="5" step="0.1" oninput="syncRange('ki','kiRange');generate()">
-          </div>
-        </div>
-        <div class="control-row">
-          <div class="control-label">Kd — Derivative<small>Oscillation dampener</small></div>
-          <div class="control-right">
-            <input type="range" id="kdRange" min="0" max="50" step="0.5" value="10" oninput="syncNum('kd','kdRange');generate()">
-            <input type="number" id="kd" value="10" min="0" max="50" step="0.5" oninput="syncRange('kd','kdRange');generate()">
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Options</div>
-        <div class="control-row">
-          <div class="control-label">Serial Debug<small>Print data to monitor</small></div>
-          <div class="toggle-group" id="serialToggle">
-            <button class="toggle-btn active" onclick="setSerial(true)">ON</button>
-            <button class="toggle-btn" onclick="setSerial(false)">OFF</button>
-          </div>
-        </div>
-        <div class="control-row">
-          <div class="control-label">When Lost<small>Both sensors off line</small></div>
-          <div class="toggle-group">
-            <button class="toggle-btn active" id="lostStop" onclick="setLost('stop')">STOP</button>
-            <button class="toggle-btn" id="lostSpin" onclick="setLost('spin')">SPIN</button>
-          </div>
-        </div>
-      </div>
-
     </div>
-  </div>
 
-  <div class="panel code-panel">
-    <div class="panel-header"><div class="dot" style="background:#39ff14"></div><h2>Generated Code</h2></div>
-    <div class="code-toolbar">
-      <div class="filename">line_follower_<span id="modeLabel">pid</span>.ino</div>
+    <div class="sec">
+      <div class="st">Pin Assignment</div>
+      <div class="pgrid">
+        <div><label>LEFT SENSOR (AOUT)</label><select id="pinSL" onchange="generate()"><option>A0</option><option>A1</option><option>A2</option><option>A3</option></select></div>
+        <div><label>RIGHT SENSOR (AOUT)</label><select id="pinSR" onchange="generate()"><option>A0</option><option selected>A1</option><option>A2</option><option>A3</option></select></div>
+        <div><label>LEFT SERVO</label><select id="pinVL" onchange="generate()"><option selected>9</option><option>10</option><option>11</option><option>3</option><option>5</option><option>6</option></select></div>
+        <div><label>RIGHT SERVO</label><select id="pinVR" onchange="generate()"><option>9</option><option selected>10</option><option>11</option><option>3</option><option>5</option><option>6</option></select></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">Speed & Servo</div>
+      <div class="cr">
+        <div class="cl">Base Speed<small>0=stop · 200=full tilt</small></div>
+        <div class="cright">
+          <input type="range" id="bsR" min="50" max="200" value="120" oninput="syncN('bs','bsR');generate()">
+          <input type="number" id="bs" value="120" min="50" max="200" oninput="syncR('bs','bsR');generate()">
+        </div>
+      </div>
+      <div class="cr">
+        <div class="cl">Servo Stop µs<small>Neutral pulse (1500 typical)</small></div>
+        <div class="cright"><input type="number" id="ss" value="1500" min="1400" max="1600" oninput="generate()"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">Starting PID Gains</div>
+      <div class="cr">
+        <div class="cl">Kp<small>Proportional — steering</small></div>
+        <div class="cright">
+          <input type="range" id="kpR" min="0" max="80" step="0.5" value="30" oninput="syncN('kp','kpR');generate()">
+          <input type="number" id="kp" value="30" min="0" max="80" step="0.5" oninput="syncR('kp','kpR');generate()">
+        </div>
+      </div>
+      <div class="cr">
+        <div class="cl">Ki<small>Integral — drift fix</small></div>
+        <div class="cright">
+          <input type="range" id="kiR" min="0" max="5" step="0.1" value="0.5" oninput="syncN('ki','kiR');generate()">
+          <input type="number" id="ki" value="0.5" min="0" max="5" step="0.1" oninput="syncR('ki','kiR');generate()">
+        </div>
+      </div>
+      <div class="cr">
+        <div class="cl">Kd<small>Derivative — dampener</small></div>
+        <div class="cright">
+          <input type="range" id="kdR" min="0" max="50" step="0.5" value="10" oninput="syncN('kd','kdR');generate()">
+          <input type="number" id="kd" value="10" min="0" max="50" step="0.5" oninput="syncR('kd','kdR');generate()">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MIDDLE: CODE + FLASH ──────────────────────────────────── -->
+<div class="panel code-panel">
+  <div class="ph">
+    <div class="pdot" style="background:var(--green)"></div>
+    <h2>Generated Code</h2>
+    <div class="ph-actions">
       <button class="btn btn-copy" id="copyBtn" onclick="copyCode()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
       </button>
-      <button class="btn btn-download" onclick="downloadCode()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download .ino
+      <button class="btn btn-dl" onclick="downloadCode()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
       </button>
-      <button class="btn btn-upload" id="compileBtn" onclick="compileAndUpload()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-        Compile &amp; Upload
-      </button>
-    </div>
-
-    <pre id="codeOutput"></pre>
-
-    <div class="compile-bar" id="compileBar">
-      <div class="compile-status" id="compileStatus">Idle</div>
-      <div class="log-area" id="logArea"></div>
-      <button id="flashBtn" arduino-uploader board="uno">
-        ⚡ Flash to Arduino
-        <span class="upload-progress"></span>
-      </button>
-    </div>
-
-    <div class="stats-bar">
-      <div class="stat"><div class="stat-dot"></div><span id="lineCount">0</span> lines</div>
-      <div class="stat">· <span id="byteCount">0</span> bytes</div>
     </div>
   </div>
+  <div class="ct">
+    <div class="fname">line_follower_<span id="modeLabel">calib</span>.ino</div>
+    <button class="btn btn-flash" id="flashBtn" onclick="doFlash()" disabled>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span id="flashLabel">Compile &amp; Flash</span>
+    </button>
+  </div>
+  <pre id="codeOut"></pre>
+  <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+  <div class="flash-log" id="flashLog"></div>
+  <div class="sb">
+    <div class="si"><span class="sdot"></span><span id="lc">0</span> lines</div>
+    <div class="si">· <span id="bc">0</span> bytes</div>
+    <div class="si" id="flashStatus" style="margin-left:auto"></div>
+  </div>
+</div>
 
+<!-- ── RIGHT: SERIAL MONITOR ────────────────────────────────── -->
+<div class="panel sm-panel">
+  <div class="ph">
+    <div class="pdot" style="background:var(--purple)"></div>
+    <h2>Serial Monitor</h2>
+    <div class="ph-actions">
+      <button class="sm-clear" onclick="clearSM()">Clear</button>
+      <button class="conn-btn" id="connBtn" onclick="toggleSerialConnect()">Connect</button>
+    </div>
+  </div>
+  <div class="sm-out" id="smOut">
+    <div class="sm-line sys">Serial Monitor — connect Arduino to begin</div>
+  </div>
+  <div class="sm-input-row">
+    <input type="text" id="smInput" placeholder="Send message to Arduino..." onkeydown="if(event.key==='Enter')sendSerial()">
+    <button class="sm-send" onclick="sendSerial()">Send ↵</button>
+  </div>
+  <div class="sm-toolbar">
+    <select id="baudRate" onchange="onBaudChange()">
+      <option value="9600" selected>9600 baud</option>
+      <option value="19200">19200 baud</option>
+      <option value="38400">38400 baud</option>
+      <option value="57600">57600 baud</option>
+      <option value="115200">115200 baud</option>
+    </select>
+    <select id="lineEnd">
+      <option value="\n">Newline</option>
+      <option value="\r\n">CR+NL</option>
+      <option value="\r">Carriage Return</option>
+      <option value="">No line ending</option>
+    </select>
+    <label><input type="checkbox" id="autoScroll" checked> Autoscroll</label>
+    <label><input type="checkbox" id="showTimestamp"> Timestamps</label>
+    <span class="sm-count" id="smCount">0 lines</span>
+  </div>
 </div>
-</div>
+
+</div><!-- /layout -->
+</div><!-- /wrap -->
 
 <script>
-const state={mode:'pid',sensor:'digital',logic:'high',serial:true,lost:'stop'};
-let hexBlobUrl=null;
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const S = { mode: 'calib' };
 
-// Web Serial check
-if(!navigator.serial){
-  document.getElementById('wsLabel').textContent='⚠ Use Chrome for upload';
-  document.getElementById('wsLabel').style.color='var(--yellow)';
-  document.getElementById('compileBtn').disabled=true;
-  document.getElementById('compileBtn').style.opacity='0.4';
-}
+// ═══════════════════════════════════════════════════════════════
+// SKETCH TEMPLATES
+// ═══════════════════════════════════════════════════════════════
+function getCalibSketch(pSL, pSR, pVL, pVR, bs, ss, kp, ki, kd) {
+  return `#include <Servo.h>
 
-async function compileAndUpload(){
-  const bar=document.getElementById('compileBar');
-  const stat=document.getElementById('compileStatus');
-  const logArea=document.getElementById('logArea');
-  const flashBtn=document.getElementById('flashBtn');
-  bar.className='compile-bar visible';
-  flashBtn.style.display='none';
-  logArea.innerHTML='';
-  stat.className='compile-status compiling';
-  stat.textContent='⏳ Compiling...';
-  ll('Sending to Arduino Cloud compiler...','info');
+const int PIN_LEFT        = ${pSL};
+const int PIN_RIGHT       = ${pSR};
+const int PIN_SERVO_LEFT  = ${pVL};
+const int PIN_SERVO_RIGHT = ${pVR};
 
-  const code=document.getElementById('codeOutput').textContent;
-  const SERVER='http://127.0.0.1:3456';
+Servo servoLeft;
+Servo servoRight;
 
-  // Step 1: check server is running
-  ll('Checking KyriosLearn Agent...','info');
-  let pingData = null;
-  try{
-    const pingRes = await fetch(SERVER+'/ping');
-    pingData = await pingRes.json();
-  }catch(e){
-    stat.className='compile-status error';
-    stat.textContent='⚠ Agent not running';
-    logArea.innerHTML='';
-    logArea.innerHTML += '<div style="background:#1a1a2e;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:8px 0;color:#f8f8f2">' +
-      '<div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px">⚡ KyriosLearn Agent Required</div>' +
-      '<div style="font-size:12px;color:#ccc;margin-bottom:12px">The Agent runs on your PC and compiles Arduino sketches. It only takes a minute to set up.</div>' +
-      '<div style="font-size:12px;margin-bottom:6px"><b style="color:#a78bfa">Step 1:</b> Download the Agent files (ZIP)</div>' +
-      '<div style="font-size:12px;margin-bottom:6px"><b style="color:#a78bfa">Step 2:</b> Extract and double-click <code style="background:#333;padding:2px 5px;border-radius:3px">KyriosLearn-Agent.bat</code></div>' +
-      '<div style="font-size:12px;margin-bottom:14px"><b style="color:#a78bfa">Step 3:</b> Come back here and click Compile again</div>' +
-      '<a href="https://github.com/kyrioslearn/line-follower/releases/latest/download/KyriosLearn-Agent.zip" ' +
-      'style="display:inline-block;background:#7c3aed;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600">⬇ Download KyriosLearn Agent</a>' +
-      '</div>';
-    return;
-  }
-  // Check if still setting up
-  if(pingData && pingData.status === 'setting_up'){
-    stat.className='compile-status compiling';
-    stat.textContent='⏳ Agent is setting up...';
-    ll('Agent is still downloading arduino-cli / AVR core.','warn');
-    ll('This only happens once. Wait a minute and try again.','info');
-    if(pingData.log) pingData.log.forEach(l=>ll(l,'info'));
-    return;
-  }
-  if(pingData && pingData.status === 'error'){
-    stat.className='compile-status error';
-    stat.textContent='✗ Agent setup failed';
-    ll('Agent error: '+(pingData.error||'unknown'),'error');
-    ll('Try closing and restarting KyriosLearn-Agent.bat','warn');
-    return;
-  }
+const int SERVO_STOP = ${ss};
+const int MAX_OFFSET = 200;
 
-  // Step 2: compile
-  ll('Sending sketch to local compiler...','info');
-  try{
-    const res=await fetch(SERVER+'/compile',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({sketch:code})
-    });
-    const data=await res.json();
-    if(!res.ok){
-      stat.className='compile-status error';
-      stat.textContent='✗ Compile failed';
-      ll(data.details||data.error||'Unknown error','error');
-      return;
+float Kp = ${kp};
+float Ki = ${ki};
+float Kd = ${kd};
+
+float error      = 0;
+float lastError  = 0;
+float integral   = 0;
+float derivative = 0;
+float pidOutput  = 0;
+
+int baseSpeed = ${bs};
+unsigned long lastTime = 0;
+
+int leftWhite  = 0; int rightWhite  = 0;
+int leftBlack  = 0; int rightBlack  = 0;
+int leftThreshold  = 512;
+int rightThreshold = 512;
+
+struct CalibAttempt {
+  float Kp, Ki, Kd;
+  int baseSpeed;
+  int leftThresh, rightThresh;
+};
+CalibAttempt attempts[10];
+int attemptCount = 0;
+
+void waitForY(String prompt) {
+  Serial.println(prompt);
+  Serial.println("  >> Type Y and press Send when ready");
+  while (true) {
+    if (Serial.available()) {
+      char c = toupper(Serial.read());
+      while (Serial.available()) Serial.read();
+      if (c == 'Y') return;
+      Serial.println("  >> Please type Y to continue");
     }
-    const hex=data.hex;
-    if(!hex){stat.className='compile-status error';stat.textContent='✗ No hex returned';return;}
-    ll('✓ Compiled! '+hex.length+' bytes','ok');
-    stat.className='compile-status ok';
-    stat.textContent='✓ Ready — click Flash to upload';
-    if(hexBlobUrl)URL.revokeObjectURL(hexBlobUrl);
-    hexBlobUrl=URL.createObjectURL(new Blob([hex],{type:'text/plain'}));
-    flashBtn.setAttribute('hex-href',hexBlobUrl);
-    flashBtn.style.display='flex';
-    ll('Click ⚡ Flash → Chrome will ask you to select your COM port','info');
-  }catch(e){
-    stat.className='compile-status error';
-    stat.textContent='✗ '+e.message;
-    ll(e.message,'error');
   }
 }
 
-function ll(msg,cls=''){
-  const d=document.createElement('div');
-  d.className='ll '+cls; d.textContent=msg;
-  const a=document.getElementById('logArea');
-  a.appendChild(d); a.scrollTop=a.scrollHeight;
-}
-
-function setMode(m){state.mode=m;document.querySelectorAll('.toggle-btn').forEach(b=>{if(b.textContent==='PID Control'||b.textContent==='Simple On/Off')b.classList.toggle('active',(m==='pid'&&b.textContent==='PID Control')||(m==='simple'&&b.textContent==='Simple On/Off'));});document.getElementById('pidSection').style.display=m==='pid'?'block':'none';document.getElementById('modeLabel').textContent=m;generate();}
-function setSensor(s){state.sensor=s;document.querySelectorAll('.toggle-btn').forEach(b=>{if(b.textContent==='Digital (DOUT)'||b.textContent==='Analog (AOUT)')b.classList.toggle('active',(s==='digital'&&b.textContent==='Digital (DOUT)')||(s==='analog'&&b.textContent==='Analog (AOUT)'));});if(s==='analog'){document.getElementById('pinSensorLeft').value='A0';document.getElementById('pinSensorRight').value='A1';}else{document.getElementById('pinSensorLeft').value='3';document.getElementById('pinSensorRight').value='5';}generate();}
-function setLogic(l){state.logic=l;document.querySelectorAll('.toggle-btn').forEach(b=>{if(b.textContent==='LOW'||b.textContent==='HIGH')b.classList.toggle('active',b.textContent.toLowerCase()===l);});generate();}
-function setSerial(on){state.serial=on;const btns=document.getElementById('serialToggle').querySelectorAll('.toggle-btn');btns[0].classList.toggle('active',on);btns[1].classList.toggle('active',!on);generate();}
-function setLost(l){state.lost=l;document.getElementById('lostStop').classList.toggle('active',l==='stop');document.getElementById('lostSpin').classList.toggle('active',l==='spin');generate();}
-function syncNum(n,r){document.getElementById(n).value=document.getElementById(r).value;}
-function syncRange(n,r){document.getElementById(r).value=document.getElementById(n).value;}
-function v(id){return document.getElementById(id).value;}
-
-function generate(){
-  const pSL=v('pinSensorLeft'),pSR=v('pinSensorRight'),pVL=v('pinServoLeft'),pVR=v('pinServoRight');
-  const bs=v('baseSpeed'),ss=v('servoStop'),sd=parseInt(v('startDelay'))*1000;
-  const kp=v('kp'),ki=v('ki'),kd=v('kd');
-  const isPID=state.mode==='pid',isAn=state.sensor==='analog',lv=state.logic==='low'?'LOW':'HIGH';
-  let c=`/*\n * Line Following Robot — ${isPID?'PID Control':'Simple On/Off'}\n * KyriosLearn Africa / SafariSTEM\n *\n`;
-  c+=` * WIRING:\n *   Left  Sensor ${isAn?'AOUT':'OUT'} → ${isAn?'A0':pSL}\n *   Right Sensor ${isAn?'AOUT':'OUT'} → ${isAn?'A1':pSR}\n`;
-  c+=` *   Left  Servo  SIG → ${pVL}\n *   Right Servo  SIG → ${pVR}\n`;
-  c+=` *   Sensors VCC → 5V  |  Servos VCC → External 5V (≥2A)\n *   Sensor logic: ${lv} = line detected\n */\n\n`;
-  c+=`#include <Servo.h>\n\n`;
-  c+=isAn?`const int PIN_LEFT=A0;\nconst int PIN_RIGHT=A1;\n`:`const int PIN_LEFT=${pSL};\nconst int PIN_RIGHT=${pSR};\n`;
-  c+=`const int PIN_SERVO_LEFT=${pVL};\nconst int PIN_SERVO_RIGHT=${pVR};\n\n`;
-  c+=`Servo servoLeft;\nServo servoRight;\nconst int SERVO_STOP=${ss};\nconst int MAX_OFFSET=200;\nint baseSpeed=${bs};\n\n`;
-  if(isPID){c+=`float Kp=${kp},Ki=${ki},Kd=${kd};\nfloat error=0,lastError=0,integral=0,derivative=0,pidOutput=0;\nunsigned long lastTime=0;\n\n`;}
-  if(isAn){c+=`int leftMin=1023,leftMax=0,rightMin=1023,rightMax=0;\nint leftThreshold=512,rightThreshold=512;\n\nvoid waitForY(String msg){Serial.println(msg);Serial.println("Press Y + Send when ready...");while(true){if(Serial.available()){char c=toupper(Serial.read());while(Serial.available())Serial.read();if(c=='Y')return;}}}\nvoid readAvg(int &l,int &r,int n){long ls=0,rs=0;for(int i=0;i<n;i++){ls+=analogRead(PIN_LEFT);rs+=analogRead(PIN_RIGHT);delay(10);}l=ls/n;r=rs/n;}\nvoid calibrate(){int lw,rw,lb,rb;waitForY("Place sensor over WHITE surface.");readAvg(lw,rw,50);Serial.print("White L:");Serial.print(lw);Serial.print(" R:");Serial.println(rw);waitForY("Place sensor over BLACK line.");readAvg(lb,rb,50);Serial.print("Black L:");Serial.print(lb);Serial.print(" R:");Serial.println(rb);leftThreshold=(lw+lb)/2;rightThreshold=(rw+rb)/2;Serial.println("Calibration done!");}\n\n`;}
-  c+=`void setup(){Serial.begin(9600);pinMode(PIN_LEFT,INPUT);pinMode(PIN_RIGHT,INPUT);servoLeft.attach(PIN_SERVO_LEFT);servoRight.attach(PIN_SERVO_RIGHT);servoLeft.writeMicroseconds(SERVO_STOP);servoRight.writeMicroseconds(SERVO_STOP);`;
-  if(isAn)c+=`calibrate();`;
-  c+=`Serial.println("Starting in ${v('startDelay')}s — place on track!");delay(${sd});Serial.println("GO!");`;
-  if(isPID)c+=`lastTime=millis();`;
-  c+=`}\n\nvoid loop(){\n`;
-  if(isAn){c+=`  int leftVal=analogRead(PIN_LEFT);\n  int rightVal=analogRead(PIN_RIGHT);\n  bool leftLine=(leftVal>leftThreshold);\n  bool rightLine=(rightVal>rightThreshold);\n\n`;}
-  else{c+=`  bool leftLine=(digitalRead(PIN_LEFT)==${lv});\n  bool rightLine=(digitalRead(PIN_RIGHT)==${lv});\n\n`;}
-  c+=`  if(!leftLine&&!rightLine){\n    servoLeft.writeMicroseconds(SERVO_STOP);\n    servoRight.writeMicroseconds(SERVO_STOP);\n`;
-  if(isPID)c+=`    integral=0;lastError=0;\n`;
-  if(state.serial)c+=`    Serial.println("** STOPPED — LOST **");\n`;
-  if(state.lost==='spin')c+=`    int sp=(lastError>0)?baseSpeed:-baseSpeed;\n    servoLeft.writeMicroseconds(SERVO_STOP+sp);\n    servoRight.writeMicroseconds(SERVO_STOP-sp);\n`;
-  c+=`    delay(10);return;\n  }\n\n`;
-  if(isPID){
-    if(isAn){c+=`  float lN=map(leftVal,leftMin,leftMax,-100,100)/100.0;\n  float rN=map(rightVal,rightMin,rightMax,-100,100)/100.0;\n  error=constrain(rN-lN,-1.0,1.0);\n\n`;}
-    else{c+=`  if(leftLine&&rightLine) error=0.0;\n  else if(leftLine&&!rightLine) error=-1.0;\n  else error=1.0;\n\n`;}
-    c+=`  unsigned long now=millis();\n  float dt=(now-lastTime)/1000.0;\n  if(dt<=0)dt=0.01;\n  lastTime=now;\n  integral+=error*dt;\n  integral=constrain(integral,-10.0,10.0);\n  derivative=(error-lastError)/dt;\n  pidOutput=(Kp*error)+(Ki*integral)+(Kd*derivative);\n  pidOutput=constrain(pidOutput,-MAX_OFFSET,MAX_OFFSET);\n  lastError=error;\n  int leftSpeed=constrain(baseSpeed-(int)pidOutput,-MAX_OFFSET,MAX_OFFSET);\n  int rightSpeed=constrain(baseSpeed+(int)pidOutput,-MAX_OFFSET,MAX_OFFSET);\n  servoLeft.writeMicroseconds(SERVO_STOP+leftSpeed);\n  servoRight.writeMicroseconds(SERVO_STOP-rightSpeed);\n\n`;
-    if(state.serial)c+=`  Serial.print(leftLine?"LINE ":"white ");Serial.print(rightLine?"| LINE ":"| white ");Serial.print("| Err:");Serial.print(error,2);Serial.print(" PID:");Serial.print(pidOutput,1);Serial.print(" LS:");Serial.print(SERVO_STOP+leftSpeed);Serial.print(" RS:");Serial.print(SERVO_STOP-rightSpeed);Serial.print(" | ");if(leftLine&&rightLine)Serial.println("ON LINE");else if(leftLine)Serial.println("VEER LEFT");else Serial.println("VEER RIGHT");\n\n`;
-  }else{
-    c+=`  if(leftLine&&rightLine){servoLeft.writeMicroseconds(SERVO_STOP+baseSpeed);servoRight.writeMicroseconds(SERVO_STOP-baseSpeed);`;if(state.serial)c+=`Serial.println("FORWARD");`;c+=`}else if(leftLine&&!rightLine){servoLeft.writeMicroseconds(SERVO_STOP-baseSpeed);servoRight.writeMicroseconds(SERVO_STOP-baseSpeed);`;if(state.serial)c+=`Serial.println("TURN LEFT");`;c+=`}else{servoLeft.writeMicroseconds(SERVO_STOP+baseSpeed);servoRight.writeMicroseconds(SERVO_STOP+baseSpeed);`;if(state.serial)c+=`Serial.println("TURN RIGHT");`;c+=`}\n\n`;
+bool waitForYN(String prompt) {
+  Serial.println(prompt);
+  Serial.println("  >> Type Y (yes) or N (no) and press Send");
+  while (true) {
+    if (Serial.available()) {
+      char c = toupper(Serial.read());
+      while (Serial.available()) Serial.read();
+      if (c == 'Y') return true;
+      if (c == 'N') return false;
+      Serial.println("  >> Please type Y or N");
+    }
   }
-  c+=`  delay(10);\n}\n`;
-  document.getElementById('codeOutput').textContent=c;
-  document.getElementById('lineCount').textContent=c.split('\n').length;
-  document.getElementById('byteCount').textContent=new Blob([c]).size;
 }
 
-function copyCode(){navigator.clipboard.writeText(document.getElementById('codeOutput').textContent).then(()=>{const btn=document.getElementById('copyBtn');btn.textContent='✓ Copied!';btn.classList.add('copied');setTimeout(()=>{btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`;btn.classList.remove('copied');},2000);});}
-function downloadCode(){const blob=new Blob([document.getElementById('codeOutput').textContent],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`line_follower_${state.mode}.ino`;a.click();}
+int waitForNumber(int minVal, int maxVal, String prompt) {
+  Serial.println(prompt);
+  String buf = "";
+  while (true) {
+    if (Serial.available()) {
+      char c = Serial.read();
+      if (c == '\\n' || c == '\\r') {
+        if (buf.length() > 0) {
+          int val = buf.toInt();
+          buf = "";
+          if (val >= minVal && val <= maxVal) return val;
+          Serial.print("  >> Enter a number between ");
+          Serial.print(minVal); Serial.print(" and ");
+          Serial.println(maxVal);
+        }
+      } else if (isDigit(c)) {
+        buf += c;
+      }
+    }
+  }
+}
+
+int avgRead(int pin) {
+  long sum = 0;
+  for (int i = 0; i < 100; i++) {
+    sum += analogRead(pin);
+    delay(5);
+  }
+  return sum / 100;
+}
+
+void runFor5Seconds(int lThresh, int rThresh, float kp, float ki, float kd, int spd) {
+  Serial.println("  >> Running for 5 seconds...");
+  unsigned long start = millis();
+  float localIntegral = 0;
+  float localLastError = 0;
+  unsigned long localLastTime = millis();
+
+  while (millis() - start < 5000) {
+    int leftVal  = analogRead(PIN_LEFT);
+    int rightVal = analogRead(PIN_RIGHT);
+    bool leftLine  = (leftVal  > lThresh);
+    bool rightLine = (rightVal > rThresh);
+    if (!leftLine && !rightLine) {
+      servoLeft.writeMicroseconds(SERVO_STOP);
+      servoRight.writeMicroseconds(SERVO_STOP);
+      localIntegral = 0; localLastError = 0;
+      continue;
+    }
+    float leftNorm  = map(leftVal,  leftBlack, leftWhite,  -100, 100) / 100.0;
+    float rightNorm = map(rightVal, rightBlack, rightWhite, -100, 100) / 100.0;
+    float err = constrain(rightNorm - leftNorm, -1.0, 1.0);
+    unsigned long now = millis();
+    float dt = (now - localLastTime) / 1000.0;
+    if (dt <= 0) dt = 0.01;
+    localLastTime = now;
+    localIntegral += err * dt;
+    localIntegral  = constrain(localIntegral, -10.0, 10.0);
+    float deriv = (err - localLastError) / dt;
+    float pid   = (kp * err) + (ki * localIntegral) + (kd * deriv);
+    pid = constrain(pid, -MAX_OFFSET, MAX_OFFSET);
+    localLastError = err;
+    int ls = constrain(spd - (int)pid, -MAX_OFFSET, MAX_OFFSET);
+    int rs = constrain(spd + (int)pid, -MAX_OFFSET, MAX_OFFSET);
+    servoLeft.writeMicroseconds(SERVO_STOP + ls);
+    servoRight.writeMicroseconds(SERVO_STOP - rs);
+    delay(10);
+  }
+  servoLeft.writeMicroseconds(SERVO_STOP);
+  servoRight.writeMicroseconds(SERVO_STOP);
+  Serial.println("  >> 5 seconds done — robot stopped");
+}
+
+void adjustPID(int attempt, float &kp, float &ki, float &kd, int &spd) {
+  switch (attempt % 5) {
+    case 0: kp += 5;  kd += 2;               break;
+    case 1: kp -= 5;  kd += 5;               break;
+    case 2: kp += 10; kd -= 2; spd -= 10;   break;
+    case 3: kp -= 10; ki += 0.5; spd += 10; break;
+    case 4: kp = 30;  ki = 0.5; kd = 10;    break;
+  }
+  kp  = constrain(kp,  5,   80);
+  ki  = constrain(ki,  0,    5);
+  kd  = constrain(kd,  0,   30);
+  spd = constrain(spd, 60, 180);
+}
+
+void calibrationWizard() {
+  Serial.println("=============================================");
+  Serial.println("  LINE FOLLOWER CALIBRATION WIZARD");
+  Serial.println("  Set Serial Monitor line ending: Newline");
+  Serial.println("=============================================");
+
+  waitForY("  STEP 1: Place sensor over WHITE surface");
+  leftWhite  = avgRead(PIN_LEFT);
+  rightWhite = avgRead(PIN_RIGHT);
+  Serial.print("  White — Left: "); Serial.print(leftWhite);
+  Serial.print("  Right: "); Serial.println(rightWhite);
+
+  waitForY("  STEP 2: Place sensor over BLACK surface");
+  leftBlack  = avgRead(PIN_LEFT);
+  rightBlack = avgRead(PIN_RIGHT);
+  Serial.print("  Black — Left: "); Serial.print(leftBlack);
+  Serial.print("  Right: "); Serial.println(rightBlack);
+
+  if (abs(leftWhite - leftBlack) < 50 || abs(rightWhite - rightBlack) < 50) {
+    Serial.println("  !! WARNING: Low contrast. Adjust sensor height to 8-12mm.");
+  }
+
+  leftThreshold  = (leftWhite  + leftBlack)  / 2;
+  rightThreshold = (rightWhite + rightBlack) / 2;
+  Serial.print("  Thresholds — Left: "); Serial.print(leftThreshold);
+  Serial.print("  Right: "); Serial.println(rightThreshold);
+
+  float testKp = Kp, testKi = Ki, testKd = Kd;
+  int   testSpd = baseSpeed;
+  int   totalRounds = 0;
+
+  while (true) {
+    int roundStart = attemptCount;
+    int roundEnd   = roundStart + 5;
+    for (int i = roundStart; i < roundEnd; i++) {
+      Serial.println("---------------------------------------------");
+      Serial.print("  ATTEMPT "); Serial.print(i + 1);
+      Serial.print(" — Kp:"); Serial.print(testKp);
+      Serial.print(" Ki:"); Serial.print(testKi);
+      Serial.print(" Kd:"); Serial.print(testKd);
+      Serial.print(" Speed:"); Serial.println(testSpd);
+      attempts[i] = {testKp, testKi, testKd, testSpd, leftThreshold, rightThreshold};
+      attemptCount++;
+      waitForY("  Place robot on the LINE and type Y to start");
+      runFor5Seconds(leftThreshold, rightThreshold, testKp, testKi, testKd, testSpd);
+      bool good = waitForYN("  Did it follow the line well?");
+      if (good) {
+        Serial.println("  >> Great! Using these settings.");
+        Kp = testKp; Ki = testKi; Kd = testKd; baseSpeed = testSpd;
+        return;
+      }
+      adjustPID(i, testKp, testKi, testKd, testSpd);
+    }
+    Serial.println("=============================================");
+    Serial.println("  None worked perfectly. Which attempt");
+    Serial.print("  tracked BEST? Enter ");
+    Serial.print(roundStart + 1); Serial.print("-");
+    Serial.println(roundEnd);
+    Serial.println("  (or 0 if none were good)");
+    int best = waitForNumber(0, roundEnd, "");
+    if (best == 0) {
+      Serial.println("  >> Running 5 more adjustments...");
+      totalRounds++;
+      if (totalRounds >= 3) {
+        Serial.println("  !! Too many rounds. Using best guess settings.");
+        Kp = 25; Ki = 0.3; Kd = 12; baseSpeed = 100;
+        return;
+      }
+      continue;
+    }
+    CalibAttempt chosen = attempts[best - 1];
+    Kp = chosen.Kp; Ki = chosen.Ki; Kd = chosen.Kd;
+    baseSpeed = chosen.baseSpeed;
+    leftThreshold  = chosen.leftThresh;
+    rightThreshold = chosen.rightThresh;
+    Serial.println("  >> Settings locked in. Starting line follower!");
+    return;
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(PIN_LEFT,  INPUT);
+  pinMode(PIN_RIGHT, INPUT);
+  servoLeft.attach(PIN_SERVO_LEFT);
+  servoRight.attach(PIN_SERVO_RIGHT);
+  servoLeft.writeMicroseconds(SERVO_STOP);
+  servoRight.writeMicroseconds(SERVO_STOP);
+  calibrationWizard();
+  Serial.println("=============================================");
+  Serial.println("  CALIBRATION COMPLETE — LINE FOLLOWING ON");
+  Serial.print("  Final — Kp:"); Serial.print(Kp);
+  Serial.print(" Ki:"); Serial.print(Ki);
+  Serial.print(" Kd:"); Serial.print(Kd);
+  Serial.print(" Speed:"); Serial.println(baseSpeed);
+  Serial.println("=============================================");
+  lastTime = millis();
+}
+
+void loop() {
+  int leftVal  = analogRead(PIN_LEFT);
+  int rightVal = analogRead(PIN_RIGHT);
+  bool leftLine  = (leftVal  > leftThreshold);
+  bool rightLine = (rightVal > rightThreshold);
+
+  if (!leftLine && !rightLine) {
+    servoLeft.writeMicroseconds(SERVO_STOP);
+    servoRight.writeMicroseconds(SERVO_STOP);
+    integral = 0; lastError = 0;
+    Serial.print("  L:"); Serial.print(leftVal);
+    Serial.print(" R:"); Serial.print(rightVal);
+    Serial.println(" | ** STOPPED — LOST **");
+    delay(10);
+    return;
+  }
+
+  float leftNorm  = map(leftVal,  leftBlack, leftWhite,  -100, 100) / 100.0;
+  float rightNorm = map(rightVal, rightBlack, rightWhite, -100, 100) / 100.0;
+  error = constrain(rightNorm - leftNorm, -1.0, 1.0);
+
+  unsigned long now = millis();
+  float dt = (now - lastTime) / 1000.0;
+  if (dt <= 0) dt = 0.01;
+  lastTime = now;
+
+  integral  += error * dt;
+  integral   = constrain(integral, -10.0, 10.0);
+  derivative = (error - lastError) / dt;
+  pidOutput  = (Kp * error) + (Ki * integral) + (Kd * derivative);
+  pidOutput  = constrain(pidOutput, -MAX_OFFSET, MAX_OFFSET);
+  lastError  = error;
+
+  int leftSpeed  = constrain(baseSpeed - (int)pidOutput, -MAX_OFFSET, MAX_OFFSET);
+  int rightSpeed = constrain(baseSpeed + (int)pidOutput, -MAX_OFFSET, MAX_OFFSET);
+
+  servoLeft.writeMicroseconds(SERVO_STOP + leftSpeed);
+  servoRight.writeMicroseconds(SERVO_STOP - rightSpeed);
+
+  Serial.print("  L:"); Serial.print(leftVal);
+  Serial.print(" R:"); Serial.print(rightVal);
+  Serial.print(" | Err:"); Serial.print(error, 2);
+  Serial.print(" PID:"); Serial.print(pidOutput, 1);
+  Serial.print(" LS:"); Serial.print(SERVO_STOP + leftSpeed);
+  Serial.print(" RS:"); Serial.print(SERVO_STOP - rightSpeed);
+  Serial.print(" | ");
+  if      (leftLine && rightLine)  Serial.println("ON LINE");
+  else if (leftLine && !rightLine) Serial.println("VEER LEFT");
+  else                             Serial.println("VEER RIGHT");
+  delay(10);
+}`;
+}
+
+function getSimpleSketch(pSL, pSR, pVL, pVR, bs, ss, kp, ki, kd) {
+  return `#include <Servo.h>
+
+const int PIN_LEFT        = ${pSL};
+const int PIN_RIGHT       = ${pSR};
+const int PIN_SERVO_LEFT  = ${pVL};
+const int PIN_SERVO_RIGHT = ${pVR};
+
+Servo servoLeft;
+Servo servoRight;
+
+const int SERVO_STOP = ${ss};
+const int MAX_OFFSET = 200;
+
+float Kp = ${kp}, Ki = ${ki}, Kd = ${kd};
+float error = 0, lastError = 0, integral = 0, derivative = 0, pidOutput = 0;
+int baseSpeed = ${bs};
+unsigned long lastTime = 0;
+
+int leftThreshold = 512, rightThreshold = 512;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(PIN_LEFT, INPUT);
+  pinMode(PIN_RIGHT, INPUT);
+  servoLeft.attach(PIN_SERVO_LEFT);
+  servoRight.attach(PIN_SERVO_RIGHT);
+  servoLeft.writeMicroseconds(SERVO_STOP);
+  servoRight.writeMicroseconds(SERVO_STOP);
+  Serial.println("Starting in 3 seconds — place on track!");
+  delay(3000);
+  Serial.println("GO!");
+  lastTime = millis();
+}
+
+void loop() {
+  int leftVal  = analogRead(PIN_LEFT);
+  int rightVal = analogRead(PIN_RIGHT);
+  bool leftLine  = (leftVal  > leftThreshold);
+  bool rightLine = (rightVal > rightThreshold);
+
+  if (!leftLine && !rightLine) {
+    servoLeft.writeMicroseconds(SERVO_STOP);
+    servoRight.writeMicroseconds(SERVO_STOP);
+    integral = 0; lastError = 0;
+    Serial.println("** STOPPED — LOST **");
+    delay(10); return;
+  }
+
+  float lN = map(leftVal,  0, 1023, -100, 100) / 100.0;
+  float rN = map(rightVal, 0, 1023, -100, 100) / 100.0;
+  error = constrain(rN - lN, -1.0, 1.0);
+
+  unsigned long now = millis();
+  float dt = (now - lastTime) / 1000.0;
+  if (dt <= 0) dt = 0.01;
+  lastTime = now;
+
+  integral  += error * dt;
+  integral   = constrain(integral, -10.0, 10.0);
+  derivative = (error - lastError) / dt;
+  pidOutput  = (Kp * error) + (Ki * integral) + (Kd * derivative);
+  pidOutput  = constrain(pidOutput, -MAX_OFFSET, MAX_OFFSET);
+  lastError  = error;
+
+  int ls = constrain(baseSpeed - (int)pidOutput, -MAX_OFFSET, MAX_OFFSET);
+  int rs = constrain(baseSpeed + (int)pidOutput, -MAX_OFFSET, MAX_OFFSET);
+
+  servoLeft.writeMicroseconds(SERVO_STOP + ls);
+  servoRight.writeMicroseconds(SERVO_STOP - rs);
+
+  Serial.print("L:"); Serial.print(leftVal);
+  Serial.print(" R:"); Serial.print(rightVal);
+  Serial.print(" | Err:"); Serial.print(error, 2);
+  Serial.print(" PID:"); Serial.print(pidOutput, 1);
+  Serial.print(" | ");
+  if (leftLine && rightLine)       Serial.println("ON LINE");
+  else if (leftLine && !rightLine) Serial.println("VEER LEFT");
+  else                             Serial.println("VEER RIGHT");
+
+  delay(10);
+}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CODE GENERATION
+// ═══════════════════════════════════════════════════════════════
+function v(id) { return document.getElementById(id).value; }
+function syncN(n, r) { document.getElementById(n).value = document.getElementById(r).value; }
+function syncR(n, r) { document.getElementById(r).value = document.getElementById(n).value; }
+
+function generate() {
+  const pSL = v('pinSL'), pSR = v('pinSR'), pVL = v('pinVL'), pVR = v('pinVR');
+  const bs = v('bs'), ss = v('ss'), kp = v('kp'), ki = v('ki'), kd = v('kd');
+  const code = S.mode === 'calib'
+    ? getCalibSketch(pSL, pSR, pVL, pVR, bs, ss, kp, ki, kd)
+    : getSimpleSketch(pSL, pSR, pVL, pVR, bs, ss, kp, ki, kd);
+  document.getElementById('codeOut').textContent = code;
+  document.getElementById('lc').textContent = code.split('\n').length;
+  document.getElementById('bc').textContent = new Blob([code]).size;
+  document.getElementById('modeLabel').textContent = S.mode;
+}
+
+function setMode(m) {
+  S.mode = m;
+  document.querySelectorAll('#\\31').forEach(()=>{});
+  document.querySelectorAll('.tb').forEach(b => {
+    if (b.textContent === 'Calibration Wizard') b.classList.toggle('active', m === 'calib');
+    if (b.textContent === 'Simple PID') b.classList.toggle('active', m === 'simple');
+  });
+  document.getElementById('modeNote').textContent = m === 'calib'
+    ? 'Interactive calibration via Serial Monitor. Reads white/black values, runs 5 PID test attempts, locks in best settings.'
+    : 'Simple PID with fixed threshold of 512. Best for quick testing once you know your sensor values.';
+  generate();
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('codeOut').textContent).then(() => {
+    const b = document.getElementById('copyBtn');
+    b.textContent = '✓ Copied!'; b.classList.add('copied');
+    setTimeout(() => { b.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`; b.classList.remove('copied'); }, 2000);
+  });
+}
+
+function downloadCode() {
+  const blob = new Blob([document.getElementById('codeOut').textContent], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `line_follower_${S.mode}.ino`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STK500v1 FLASH ENGINE
+// ═══════════════════════════════════════════════════════════════
+const STK = { OK:0x10, INSYNC:0x14, CRC_EOP:0x20, GET_SYNC:0x30,
+  SET_DEVICE:0x42, ENTER_PROGMODE:0x50, LEAVE_PROGMODE:0x51,
+  LOAD_ADDRESS:0x55, PROG_PAGE:0x64 };
+const PAGE = 128;
+
+let flashPort = null;
+let flashReader = null;
+let flashWriter = null;
+
+function parseIntelHex(hexStr) {
+  const mem = {};
+  for (const raw of hexStr.split('\n')) {
+    const line = raw.trim();
+    if (!line.startsWith(':')) continue;
+    const b = [];
+    for (let i = 1; i < line.length - 1; i += 2) b.push(parseInt(line.substr(i, 2), 16));
+    if (b[3] === 0x00) for (let i = 0; i < b[0]; i++) mem[(b[1] << 8) | b[2] + i] = b[4 + i];
+  }
+  const addrs = Object.keys(mem).map(Number);
+  if (!addrs.length) return null;
+  const buf = new Uint8Array(Math.max(...addrs) + 1).fill(0xFF);
+  for (const [a, v] of Object.entries(mem)) buf[Number(a)] = v;
+  return buf;
+}
+
+function flog(msg, cls = '') {
+  const el = document.createElement('div');
+  el.className = 'fl ' + cls; el.textContent = msg;
+  const la = document.getElementById('flashLog');
+  la.appendChild(el); la.scrollTop = la.scrollHeight;
+}
+
+function setProgress(pct) {
+  const w = document.getElementById('progWrap');
+  const b = document.getElementById('progBar');
+  if (pct > 0) w.classList.add('on'); else w.classList.remove('on');
+  b.style.width = pct + '%';
+}
+
+async function fw(bytes) {
+  await flashWriter.write(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
+}
+
+async function fr(n, ms = 3000) {
+  const buf = []; const dl = Date.now() + ms;
+  while (buf.length < n) {
+    if (Date.now() > dl) throw new Error('Read timeout');
+    const { value, done } = await flashReader.read();
+    if (done) throw new Error('Port closed');
+    if (value) for (const b of value) { buf.push(b); if (buf.length === n) break; }
+  }
+  return new Uint8Array(buf);
+}
+
+async function expect() {
+  const r = await fr(2);
+  if (r[0] !== STK.INSYNC) throw new Error('No INSYNC (got 0x' + r[0].toString(16) + ')');
+  if (r[1] !== STK.OK)     throw new Error('No OK (got 0x' + r[1].toString(16) + ')');
+}
+
+async function getSync() {
+  for (let i = 0; i < 12; i++) {
+    await fw([STK.GET_SYNC, STK.CRC_EOP]);
+    await new Promise(r => setTimeout(r, 80));
+    try {
+      const a = await fr(2, 300);
+      if (a[0] === STK.INSYNC && a[1] === STK.OK) { flog('Bootloader sync OK', 'ok'); return; }
+    } catch(e) { /* retry */ }
+  }
+  throw new Error('Cannot sync — is Arduino in bootloader mode?');
+}
+
+async function doFlash() {
+  const code = document.getElementById('codeOut').textContent;
+  const btn  = document.getElementById('flashBtn');
+  const lbl  = document.getElementById('flashLabel');
+  const flog_el = document.getElementById('flashLog');
+
+  if (!navigator.serial) {
+    alert('Web Serial not supported. Please use Google Chrome or Microsoft Edge.');
+    return;
+  }
+
+  // Step 1: check if we need the agent to compile
+  flog_el.classList.add('on');
+  flog_el.innerHTML = '';
+  setProgress(0);
+  btn.className = 'btn btn-flash flashing';
+  btn.disabled = true;
+  lbl.textContent = 'Compiling...';
+  document.getElementById('flashStatus').textContent = '';
+
+  flog('Connecting to KyriosLearn Agent...', 'info');
+
+  let hex = null;
+  try {
+    const ping = await fetch('http://127.0.0.1:3456/ping');
+    const pd   = await ping.json();
+
+    if (pd.status === 'setting_up') {
+      flog('Agent is still setting up (first run). Wait and try again.', 'warn');
+      pd.log && pd.log.forEach(l => flog(l));
+      resetFlashBtn(); return;
+    }
+    if (pd.status === 'error') {
+      flog('Agent error: ' + pd.error, 'err'); resetFlashBtn(); return;
+    }
+
+    flog('Sending sketch to compile...', 'info');
+    const res  = await fetch('http://127.0.0.1:3456/compile', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sketch: code })
+    });
+    const data = await res.json();
+    if (!res.ok) { flog('Compile failed: ' + (data.details || data.error), 'err'); resetFlashBtn(); return; }
+    hex = data.hex;
+    flog('Compiled! ' + hex.length + ' bytes', 'ok');
+  } catch(e) {
+    // Agent not running — show download prompt and stop
+    flog_el.innerHTML = '';
+    flog_el.innerHTML += `<div style="padding:12px;background:rgba(255,180,0,.07);border:1px solid rgba(255,180,0,.25);border-radius:6px;line-height:1.8">
+      <div style="color:var(--yellow);font-weight:700;margin-bottom:6px">⚡ KyriosLearn Agent not running</div>
+      <div style="color:var(--muted);font-size:10px;margin-bottom:10px">The Agent compiles Arduino sketches locally. One-time setup takes ~5 min.</div>
+      <div style="font-size:10px;margin-bottom:4px"><b style="color:var(--purple)">1.</b> Download the Agent ZIP below</div>
+      <div style="font-size:10px;margin-bottom:4px"><b style="color:var(--purple)">2.</b> Extract and double-click <code style="background:#111;padding:1px 4px;border-radius:3px">KyriosLearn-Agent.bat</code></div>
+      <div style="font-size:10px;margin-bottom:12px"><b style="color:var(--purple)">3.</b> Click Compile &amp; Flash again</div>
+      <a href="https://github.com/kyrioslearn/line-follower/releases/latest/download/KyriosLearn-Agent.zip"
+         style="display:inline-block;background:var(--purple);color:#fff;padding:7px 14px;border-radius:5px;text-decoration:none;font-size:10px;font-weight:700">⬇ Download KyriosLearn Agent</a>
+    </div>`;
+    resetFlashBtn(); return;
+  }
+
+  // Step 2: Open serial port and flash
+  lbl.textContent = 'Opening port...';
+  flog('Requesting serial port...', 'info');
+
+  const binary = parseIntelHex(hex);
+  if (!binary) { flog('Failed to parse hex file', 'err'); resetFlashBtn(); return; }
+
+  try {
+    flashPort = await navigator.serial.requestPort();
+    await flashPort.open({ baudRate: 115200 });
+    flog('Port open at 115200 baud', 'ok');
+
+    // DTR toggle to reset into bootloader
+    if (flashPort.setSignals) {
+      flog('Resetting Arduino...', 'info');
+      await flashPort.setSignals({ dataTerminalReady: false, requestToSend: true });
+      await new Promise(r => setTimeout(r, 50));
+      await flashPort.setSignals({ dataTerminalReady: true,  requestToSend: true });
+      await new Promise(r => setTimeout(r, 50));
+      await flashPort.setSignals({ dataTerminalReady: false, requestToSend: true });
+      await new Promise(r => setTimeout(r, 150));
+    }
+
+    await new Promise(r => setTimeout(r, 300));
+    flashReader = flashPort.readable.getReader();
+    flashWriter = flashPort.writable.getWriter();
+
+    lbl.textContent = 'Syncing...';
+    await getSync();
+
+    // SET_DEVICE for ATmega328P
+    await fw([STK.SET_DEVICE,0x86,0x00,0x05,0x01,0x01,0x01,0x01,0x03,0xff,0xff,0xff,0xff,0x00,0x80,0x04,0x00,0x00,0x00,0x80,0x00,STK.CRC_EOP]);
+    await expect();
+    flog('Device params OK', 'ok');
+
+    await fw([STK.ENTER_PROGMODE, STK.CRC_EOP]);
+    await expect();
+    flog('Programming mode active', 'ok');
+
+    // Write pages
+    const totalPages = Math.ceil(binary.length / PAGE);
+    flog(`Writing ${binary.length} bytes (${totalPages} pages)...`, 'info');
+    lbl.textContent = 'Writing...';
+
+    for (let p = 0; p < totalPages; p++) {
+      const wordAddr = (p * PAGE) / 2;
+      const lo = wordAddr & 0xFF, hi = (wordAddr >> 8) & 0xFF;
+      await fw([STK.LOAD_ADDRESS, lo, hi, STK.CRC_EOP]);
+      await expect();
+
+      const slice = binary.slice(p * PAGE, p * PAGE + PAGE);
+      const page = new Uint8Array(PAGE).fill(0xFF);
+      page.set(slice);
+
+      const cmd = new Uint8Array([STK.PROG_PAGE, 0x00, PAGE, 0x46, ...page, STK.CRC_EOP]);
+      await fw(cmd);
+      await expect();
+
+      const pct = Math.round(((p + 1) / totalPages) * 100);
+      setProgress(pct);
+      if (p % 8 === 0 || p === totalPages - 1)
+        flog(`Page ${p+1}/${totalPages} (${pct}%)`, '');
+    }
+
+    flog('All pages written!', 'ok');
+
+    await fw([STK.LEAVE_PROGMODE, STK.CRC_EOP]);
+    await expect();
+    flog('Left programming mode', 'ok');
+
+    // Release DTR so sketch runs
+    if (flashPort.setSignals) {
+      await flashPort.setSignals({ dataTerminalReady: true });
+      await new Promise(r => setTimeout(r, 50));
+      await flashPort.setSignals({ dataTerminalReady: false });
+    }
+
+    flashReader.releaseLock();
+    flashWriter.releaseLock();
+    await flashPort.close();
+    flashPort = null;
+
+    flog('✓ Flash complete! Arduino is running your sketch.', 'ok');
+    btn.className = 'btn btn-flash done';
+    btn.disabled = false;
+    lbl.textContent = '✓ Flashed!';
+    setProgress(100);
+    document.getElementById('flashStatus').textContent = '✓ Uploaded';
+    document.getElementById('flashStatus').style.color = 'var(--green)';
+
+    // Offer to reconnect serial monitor
+    smLog('Arduino re-started. Click Connect to open Serial Monitor.', 'sys');
+
+  } catch(e) {
+    flog('Flash error: ' + e.message, 'err');
+    try { flashReader && flashReader.releaseLock(); flashWriter && flashWriter.releaseLock(); flashPort && await flashPort.close(); } catch(_){}
+    flashPort = null;
+    resetFlashBtn();
+  }
+}
+
+function resetFlashBtn() {
+  const btn = document.getElementById('flashBtn');
+  btn.className = 'btn btn-flash';
+  btn.disabled = false;
+  document.getElementById('flashLabel').textContent = 'Compile & Flash';
+  setProgress(0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SERIAL MONITOR
+// ═══════════════════════════════════════════════════════════════
+let smPort = null;
+let smReader = null;
+let smWriter = null;
+let smReading = false;
+let smLineCount = 0;
+
+async function toggleSerialConnect() {
+  if (smPort) {
+    await disconnectSerial();
+  } else {
+    await connectSerial();
+  }
+}
+
+async function connectSerial() {
+  if (!navigator.serial) {
+    smLog('Web Serial not supported — use Chrome or Edge', 'err');
+    return;
+  }
+  try {
+    smPort = await navigator.serial.requestPort();
+    const baud = parseInt(document.getElementById('baudRate').value);
+    await smPort.open({ baudRate: baud });
+    smReading = true;
+    smLog(`Connected at ${baud} baud`, 'sys');
+    updateBadge(true);
+    readLoop();
+  } catch(e) {
+    smLog('Connect failed: ' + e.message, 'err');
+    smPort = null;
+  }
+}
+
+async function disconnectSerial() {
+  smReading = false;
+  try { smReader && await smReader.cancel(); } catch(e) {}
+  try { smReader && smReader.releaseLock(); } catch(e) {}
+  try { smWriter && smWriter.releaseLock(); } catch(e) {}
+  try { smPort && await smPort.close(); } catch(e) {}
+  smPort = null; smReader = null; smWriter = null;
+  smLog('Disconnected', 'sys');
+  updateBadge(false);
+}
+
+async function readLoop() {
+  const decoder = new TextDecoderStream();
+  const pipeDone = smPort.readable.pipeTo(decoder.writable);
+  const reader = decoder.readable.getReader();
+  smReader = reader;
+  let buf = '';
+  try {
+    while (smReading) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value;
+      let nl;
+      while ((nl = buf.indexOf('\n')) !== -1) {
+        const line = buf.slice(0, nl).replace(/\r$/, '');
+        buf = buf.slice(nl + 1);
+        if (line) smLog(line, 'rx');
+      }
+    }
+  } catch(e) {
+    if (smReading) smLog('Read error: ' + e.message, 'err');
+  }
+  reader.releaseLock();
+}
+
+async function sendSerial() {
+  const inp = document.getElementById('smInput');
+  const txt = inp.value;
+  if (!txt || !smPort) return;
+  const le  = document.getElementById('lineEnd').value;
+  try {
+    if (!smWriter) {
+      smWriter = smPort.writable.getWriter();
+    }
+    await smWriter.write(new TextEncoder().encode(txt + le));
+    smLog('> ' + txt, 'tx');
+    inp.value = '';
+  } catch(e) {
+    smLog('Send error: ' + e.message, 'err');
+  }
+}
+
+function smLog(msg, cls = '') {
+  const el = document.getElementById('smOut');
+  const ts = document.getElementById('showTimestamp').checked
+    ? `<span style="color:var(--muted)">[${new Date().toLocaleTimeString('en-GB')}] </span>` : '';
+  const div = document.createElement('div');
+  div.className = 'sm-line ' + cls;
+  div.innerHTML = ts + escHtml(msg);
+  el.appendChild(div);
+  smLineCount++;
+  document.getElementById('smCount').textContent = smLineCount + ' lines';
+  if (document.getElementById('autoScroll').checked) el.scrollTop = el.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function clearSM() {
+  document.getElementById('smOut').innerHTML = '';
+  smLineCount = 0;
+  document.getElementById('smCount').textContent = '0 lines';
+}
+
+function onBaudChange() {
+  if (smPort) {
+    smLog('Baud rate change requires reconnect — disconnect first', 'sys');
+  }
+}
+
+function updateBadge(connected) {
+  const badge  = document.getElementById('wsBadge');
+  const label  = document.getElementById('wsLabel');
+  const connBtn = document.getElementById('connBtn');
+  const flashBtn = document.getElementById('flashBtn');
+
+  if (connected) {
+    badge.className = 'ws-badge connected';
+    label.textContent = 'Connected';
+    connBtn.textContent = 'Disconnect';
+    connBtn.className = 'conn-btn disc';
+    // Can't flash while serial is open — same port
+    flashBtn.disabled = true;
+    flashBtn.title = 'Disconnect Serial Monitor first to flash';
+  } else {
+    badge.className = 'ws-badge';
+    label.textContent = 'Click to connect Arduino';
+    connBtn.textContent = 'Connect';
+    connBtn.className = 'conn-btn';
+    flashBtn.disabled = false;
+    flashBtn.title = '';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+if (!navigator.serial) {
+  document.getElementById('wsLabel').textContent = '⚠ Use Chrome/Edge for Serial';
+  document.getElementById('wsLabel').style.color = 'var(--yellow)';
+  document.getElementById('flashBtn').disabled = true;
+  document.getElementById('connBtn').disabled = true;
+}
 
 generate();
 </script>
