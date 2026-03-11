@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Line Follower Generator — KyriosLearn Africa</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://github.com/dbuezas/arduino-web-uploader/releases/download/v1.1.2/main.js"></script>
+<style>
+  :root{--bg:#0a0e1a;--panel:#0f1525;--panel2:#141b2e;--border:#1e2d4a;--accent:#00d4ff;--accent2:#ff6b35;--accent3:#39ff14;--text:#e2e8f0;--muted:#64748b;--red:#ff4444;--yellow:#ffd700;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .container{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:0 20px 60px;}
+  header{padding:24px 0 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;}
+  .logo{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),#0066ff);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .header-text h1{font-size:19px;font-weight:800;color:white;letter-spacing:-0.5px;}
+  .header-text p{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+  .webserial-badge{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 14px;}
+  .webserial-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);box-shadow:0 0 6px var(--accent3);animation:pulse 2s infinite;}
+  .webserial-badge span{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent3);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .layout{display:grid;grid-template-columns:370px 1fr;gap:18px;align-items:start;}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .panel-header{padding:13px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--panel2);}
+  .panel-header .dot{width:8px;height:8px;border-radius:50%;}
+  .panel-header h2{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .panel-body{padding:16px;}
+  .section{margin-bottom:22px;}
+  .section-title{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:11px;display:flex;align-items:center;gap:8px;}
+  .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+  .control-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:9px;}
+  .control-label{font-size:12px;color:var(--text);flex:1;min-width:0;}
+  .control-label small{display:block;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:1px;}
+  .control-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+  input[type="number"]{width:66px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:4px 8px;text-align:center;outline:none;transition:border-color 0.2s;}
+  input[type="number"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,0.1);}
+  input[type="range"]{-webkit-appearance:none;width:100px;height:4px;background:var(--border);border-radius:2px;outline:none;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(0,212,255,0.5);}
+  select{background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;padding:5px 8px;outline:none;cursor:pointer;transition:border-color 0.2s;width:100%;}
+  select:focus{border-color:var(--accent);}
+  .toggle-group{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+  .toggle-btn{flex:1;padding:5px 9px;font-family:'JetBrains Mono',monospace;font-size:11px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .toggle-btn.active{background:var(--accent);color:var(--bg);font-weight:700;}
+  .pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .pin-item label{display:block;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:3px;}
+  .pin-item select{font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .code-panel{position:sticky;top:14px;}
+  .code-toolbar{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;background:var(--panel2);flex-wrap:wrap;}
+  .filename{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);flex:1;min-width:100px;}
+  .filename span{color:var(--accent2);}
+  .btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:7px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .btn-copy{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.3);}
+  .btn-copy:hover{background:var(--accent);color:var(--bg);}
+  .btn-copy.copied{background:var(--accent3);color:var(--bg);border-color:var(--accent3);}
+  .btn-download{background:rgba(255,107,53,0.1);color:var(--accent2);border:1px solid rgba(255,107,53,0.3);}
+  .btn-download:hover{background:var(--accent2);color:white;}
+  .btn-upload{background:rgba(57,255,20,0.1);color:var(--accent3);border:1px solid rgba(57,255,20,0.3);}
+  .btn-upload:hover:not(:disabled){background:var(--accent3);color:var(--bg);}
+  .btn-upload:disabled{opacity:0.35;cursor:not-allowed;}
+  pre{padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:#a8b8d8;overflow-x:auto;max-height:58vh;overflow-y:auto;background:var(--bg);}
+  pre::-webkit-scrollbar{width:5px;height:5px;}
+  pre::-webkit-scrollbar-track{background:var(--panel);}
+  pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  .compile-bar{padding:12px 16px;border-top:1px solid var(--border);background:#080d1a;display:none;flex-direction:column;gap:10px;}
+  .compile-bar.visible{display:flex;}
+  .compile-status{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+  .compile-status.compiling{color:var(--yellow);}
+  .compile-status.ok{color:var(--accent3);}
+  .compile-status.error{color:var(--red);}
+  .log-area{font-size:11px;font-family:'JetBrains Mono',monospace;line-height:2;max-height:120px;overflow-y:auto;}
+  .log-area::-webkit-scrollbar{width:4px;}
+  .log-area::-webkit-scrollbar-thumb{background:var(--border);}
+  .ll{color:var(--muted);}
+  .ll.info{color:var(--accent);}
+  .ll.ok{color:var(--accent3);}
+  .ll.error{color:var(--red);}
+  .ll.warn{color:var(--yellow);}
+  #flashBtn{display:none;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;background:var(--accent3);color:var(--bg);border:none;cursor:pointer;transition:all 0.2s;width:fit-content;}
+  #flashBtn:hover{opacity:0.85;}
+  #flashBtn .upload-progress{font-size:10px;margin-left:4px;}
+  .stats-bar{display:flex;gap:12px;padding:9px 16px;border-top:1px solid var(--border);background:var(--panel2);flex-wrap:wrap;align-items:center;}
+  .stat{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+  .stat-dot{width:5px;height:5px;border-radius:50%;background:var(--accent3);animation:pulse 2s infinite;}
+  .info-note{background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:18px;}
+  .info-note strong{color:var(--accent);}
+  @media(max-width:900px){.layout{grid-template-columns:1fr;}.code-panel{position:static;}.webserial-badge{margin-left:0;width:100%;}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="logo">🤖</div>
+  <div class="header-text">
+    <h1>Line Follower Generator</h1>
+    <p>KyriosLearn Africa · SafariSTEM Platform · kyrioslearn.github.io</p>
+  </div>
+  <div class="webserial-badge">
+    <div class="dot"></div>
+    <span id="wsLabel">Web Serial ready</span>
+  </div>
+</header>
+
+<div class="info-note">
+  <strong>Zero installs.</strong> Configure your sketch → click <em>Compile &amp; Upload</em> → Chrome asks for your COM port → done.
+  Requires Chrome on Windows/Mac/Linux. Arduino must be plugged in via USB.
+</div>
+
+<div class="layout">
+
+  <div class="panel">
+    <div class="panel-header"><div class="dot" style="background:#00d4ff"></div><h2>Configuration</h2></div>
+    <div class="panel-body">
+
+      <div class="section">
+        <div class="section-title">Control Mode</div>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="setMode('pid')">PID Control</button>
+          <button class="toggle-btn" onclick="setMode('simple')">Simple On/Off</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Sensor Type</div>
+        <div class="toggle-group" style="margin-bottom:10px;">
+          <button class="toggle-btn active" onclick="setSensor('digital')">Digital (DOUT)</button>
+          <button class="toggle-btn" onclick="setSensor('analog')">Analog (AOUT)</button>
+        </div>
+        <div class="control-row">
+          <div class="control-label">Line Signal<small>What value = line detected?</small></div>
+          <div class="toggle-group">
+            <button class="toggle-btn" onclick="setLogic('low')">LOW</button>
+            <button class="toggle-btn active" onclick="setLogic('high')">HIGH</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Pin Assignment</div>
+        <div class="pin-grid">
+          <div class="pin-item"><label>LEFT SENSOR</label>
+            <select id="pinSensorLeft" onchange="generate()"><option>A0</option><option>A1</option><option>A2</option><option>A3</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
+          <div class="pin-item"><label>RIGHT SENSOR</label>
+            <select id="pinSensorRight" onchange="generate()"><option>A0</option><option>A1</option><option>A2</option><option>A3</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select></div>
+          <div class="pin-item"><label>LEFT SERVO</label>
+            <select id="pinServoLeft" onchange="generate()"><option selected>9</option><option>10</option><option>11</option><option>3</option><option>5</option><option>6</option></select></div>
+          <div class="pin-item"><label>RIGHT SERVO</label>
+            <select id="pinServoRight" onchange="generate()"><option>9</option><option selected>10</option><option>11</option><option>3</option><option>5</option><option>6</option></select></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Speed & Servo</div>
+        <div class="control-row">
+          <div class="control-label">Base Speed<small>0=stop · 200=full</small></div>
+          <div class="control-right">
+            <input type="range" id="baseSpeedRange" min="50" max="200" value="120" oninput="syncNum('baseSpeed','baseSpeedRange');generate()">
+            <input type="number" id="baseSpeed" value="120" min="50" max="200" oninput="syncRange('baseSpeed','baseSpeedRange');generate()">
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-label">Servo Stop µs<small>Neutral pulse width</small></div>
+          <div class="control-right"><input type="number" id="servoStop" value="1500" min="1400" max="1600" oninput="generate()"></div>
+        </div>
+        <div class="control-row">
+          <div class="control-label">Startup Delay (s)<small>Time to place robot</small></div>
+          <div class="control-right"><input type="number" id="startDelay" value="3" min="1" max="10" oninput="generate()"></div>
+        </div>
+      </div>
+
+      <div class="section" id="pidSection">
+        <div class="section-title">PID Gains</div>
+        <div class="control-row">
+          <div class="control-label">Kp — Proportional<small>Steering strength</small></div>
+          <div class="control-right">
+            <input type="range" id="kpRange" min="0" max="80" step="0.5" value="30" oninput="syncNum('kp','kpRange');generate()">
+            <input type="number" id="kp" value="30" min="0" max="80" step="0.5" oninput="syncRange('kp','kpRange');generate()">
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-label">Ki — Integral<small>Drift correction</small></div>
+          <div class="control-right">
+            <input type="range" id="kiRange" min="0" max="5" step="0.1" value="0.5" oninput="syncNum('ki','kiRange');generate()">
+            <input type="number" id="ki" value="0.5" min="0" max="5" step="0.1" oninput="syncRange('ki','kiRange');generate()">
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-label">Kd — Derivative<small>Oscillation dampener</small></div>
+          <div class="control-right">
+            <input type="range" id="kdRange" min="0" max="50" step="0.5" value="10" oninput="syncNum('kd','kdRange');generate()">
+            <input type="number" id="kd" value="10" min="0" max="50" step="0.5" oninput="syncRange('kd','kdRange');generate()">
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Options</div>
+        <div class="control-row">
+          <div class="control-label">Serial Debug<small>Print data to monitor</small></div>
+          <div class="toggle-group" id="serialToggle">
+            <button class="toggle-btn active" onclick="setSerial(true)">ON</button>
+            <button class="toggle-btn" onclick="setSerial(false)">OFF</button>
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-label">When Lost<small>Both sensors off line</small></div>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="lostStop" onclick="setLost('stop')">STOP</button>
+            <button class="toggle-btn" id="lostSpin" onclick="setLost('spin')">SPIN</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="panel code-panel">
+    <div class="panel-header"><div class="dot" style="background:#39ff14"></div><h2>Generated Code</h2></div>
+    <div class="code-toolbar">
+      <div class="filename">line_follower_<span id="modeLabel">pid</span>.ino</div>
+      <button class="btn btn-copy" id="copyBtn" onclick="copyCode()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
+      </button>
+      <button class="btn btn-download" onclick="downloadCode()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download .ino
+      </button>
+      <button class="btn btn-upload" id="compileBtn" onclick="compileAndUpload()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        Compile &amp; Upload
+      </button>
+    </div>
+
+    <pre id="codeOutput"></pre>
+
+    <div class="compile-bar" id="compileBar">
+      <div class="compile-status" id="compileStatus">Idle</div>
+      <div class="log-area" id="logArea"></div>
+      <button id="flashBtn" arduino-uploader board="uno">
+        ⚡ Flash to Arduino
+        <span class="upload-progress"></span>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-dot"></div><span id="lineCount">0</span> lines</div>
+      <div class="stat">· <span id="byteCount">0</span> bytes</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const state={mode:'pid',sensor:'digital',logic:'high',serial:true,lost:'stop'};
+let hexBlobUrl=null;
+
+// Web Serial check
+if(!navigator.serial){
+  document.getElementById('wsLabel').textContent='⚠ Use Chrome for upload';
+  document.getElementById('wsLabel').style.color='var(--yellow)';
+  document.getElementById('compileBtn').disabled=true;
+  document.getElementById('compileBtn').style.opacity='0.4';
+}
+
+async function compileAndUpload(){
+  const bar=document.getElementById('compileBar');
+  const stat=document.getElementById('compileStatus');
+  const logArea=document.getElementById('logArea');
+  const flashBtn=document.getElementById('flashBtn');
+  bar.className='compile-bar visible';
+  flashBtn.style.display='none';
+  logArea.innerHTML='';
+  stat.className='compile-status compiling';
+  stat.textContent='⏳ Compiling...';
+  ll('Sending to Arduino Cloud compiler...','info');
+
+  const code=document.getElementById('codeOutput').textContent;
+  try{
+    const res=await fetch('https://builder.arduino.cc/v3/compile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        sketch:{name:'line_follower',files:[{name:'line_follower.ino',content:code}]},
+        board:{fqbn:'arduino:avr:uno'},
+        libraries:[]
+      })
+    });
+    if(!res.ok){
+      const t=await res.text();
+      stat.className='compile-status error';
+      stat.textContent='✗ Compile failed ('+res.status+')';
+      ll(t.substring(0,400),'error');
+      return;
+    }
+    const data=await res.json();
+    const hex=data.hex||data.data;
+    if(!hex){stat.className='compile-status error';stat.textContent='✗ No hex returned';ll('Keys: '+Object.keys(data).join(', '),'warn');return;}
+    ll('✓ Compiled! '+hex.length+' bytes','ok');
+    stat.className='compile-status ok';
+    stat.textContent='✓ Ready — click Flash to upload';
+    // Create blob URL and attach to flash button
+    if(hexBlobUrl)URL.revokeObjectURL(hexBlobUrl);
+    hexBlobUrl=URL.createObjectURL(new Blob([hex],{type:'text/plain'}));
+    flashBtn.setAttribute('hex-href',hexBlobUrl);
+    flashBtn.style.display='flex';
+    ll('Click ⚡ Flash → Chrome will ask you to select your COM port','info');
+  }catch(e){
+    stat.className='compile-status error';
+    stat.textContent='✗ '+e.message;
+    ll(e.message,'error');
+  }
+}
+
+function ll(msg,cls=''){
+  const d=document.createElement('div');
+  d.className='ll '+cls; d.textContent=msg;
+  const a=document.getElementById('logArea');
+  a.appendChild(d); a.scrollTop=a.scrollHeight;
+}
+
+function setMode(m){state.mode=m;document.querySelectorAll('.toggle-btn').forEach(b=>{if(b.textContent==='PID Control'||b.textContent==='Simple On/Off')b.classList.toggle('active',(m==='pid'&&b.textContent==='PID Control')||(m==='simple'&&b.textContent==='Simple On/Off'));});document.getElementById('pidSection').style.display=m==='pid'?'block':'none';document.getElementById('modeLabel').textContent=m;generate();}
+function setSensor(s){state.sensor=s;document.querySelectorAll('.toggle-btn').forEach(b=>{if(b.textContent==='Digital (DOUT)'||b.textContent==='Analog (AOUT)')b.classList.toggle('active',(s==='digital'&&b.textContent==='Digital (DOUT)')||(s==='analog'&&b.textContent==='Analog (AOUT)'));});if(s==='analog'){document.getElementById('pinSensorLeft').value='A0';document.getElementById('pinSensorRight').value='A1';}else{document.getElementById('pinSensorLeft').value='3';document.getElementById('pinSensorRight').value='5';}generate();}
+function setLogic(l){state.logic=l;document.querySelectorAll('.toggle-btn').forEach(b=>{if(b.textContent==='LOW'||b.textContent==='HIGH')b.classList.toggle('active',b.textContent.toLowerCase()===l);});generate();}
+function setSerial(on){state.serial=on;const btns=document.getElementById('serialToggle').querySelectorAll('.toggle-btn');btns[0].classList.toggle('active',on);btns[1].classList.toggle('active',!on);generate();}
+function setLost(l){state.lost=l;document.getElementById('lostStop').classList.toggle('active',l==='stop');document.getElementById('lostSpin').classList.toggle('active',l==='spin');generate();}
+function syncNum(n,r){document.getElementById(n).value=document.getElementById(r).value;}
+function syncRange(n,r){document.getElementById(r).value=document.getElementById(n).value;}
+function v(id){return document.getElementById(id).value;}
+
+function generate(){
+  const pSL=v('pinSensorLeft'),pSR=v('pinSensorRight'),pVL=v('pinServoLeft'),pVR=v('pinServoRight');
+  const bs=v('baseSpeed'),ss=v('servoStop'),sd=parseInt(v('startDelay'))*1000;
+  const kp=v('kp'),ki=v('ki'),kd=v('kd');
+  const isPID=state.mode==='pid',isAn=state.sensor==='analog',lv=state.logic==='low'?'LOW':'HIGH';
+  let c=`/*\n * Line Following Robot — ${isPID?'PID Control':'Simple On/Off'}\n * KyriosLearn Africa / SafariSTEM\n *\n`;
+  c+=` * WIRING:\n *   Left  Sensor ${isAn?'AOUT':'OUT'} → ${isAn?'A0':pSL}\n *   Right Sensor ${isAn?'AOUT':'OUT'} → ${isAn?'A1':pSR}\n`;
+  c+=` *   Left  Servo  SIG → ${pVL}\n *   Right Servo  SIG → ${pVR}\n`;
+  c+=` *   Sensors VCC → 5V  |  Servos VCC → External 5V (≥2A)\n *   Sensor logic: ${lv} = line detected\n */\n\n`;
+  c+=`#include <Servo.h>\n\n`;
+  c+=isAn?`const int PIN_LEFT=A0;\nconst int PIN_RIGHT=A1;\n`:`const int PIN_LEFT=${pSL};\nconst int PIN_RIGHT=${pSR};\n`;
+  c+=`const int PIN_SERVO_LEFT=${pVL};\nconst int PIN_SERVO_RIGHT=${pVR};\n\n`;
+  c+=`Servo servoLeft;\nServo servoRight;\nconst int SERVO_STOP=${ss};\nconst int MAX_OFFSET=200;\nint baseSpeed=${bs};\n\n`;
+  if(isPID){c+=`float Kp=${kp},Ki=${ki},Kd=${kd};\nfloat error=0,lastError=0,integral=0,derivative=0,pidOutput=0;\nunsigned long lastTime=0;\n\n`;}
+  if(isAn){c+=`int leftMin=1023,leftMax=0,rightMin=1023,rightMax=0;\nint leftThreshold=512,rightThreshold=512;\n\nvoid waitForY(String msg){Serial.println(msg);Serial.println("Press Y + Send when ready...");while(true){if(Serial.available()){char c=toupper(Serial.read());while(Serial.available())Serial.read();if(c=='Y')return;}}}\nvoid readAvg(int &l,int &r,int n){long ls=0,rs=0;for(int i=0;i<n;i++){ls+=analogRead(PIN_LEFT);rs+=analogRead(PIN_RIGHT);delay(10);}l=ls/n;r=rs/n;}\nvoid calibrate(){int lw,rw,lb,rb;waitForY("Place sensor over WHITE surface.");readAvg(lw,rw,50);Serial.print("White L:");Serial.print(lw);Serial.print(" R:");Serial.println(rw);waitForY("Place sensor over BLACK line.");readAvg(lb,rb,50);Serial.print("Black L:");Serial.print(lb);Serial.print(" R:");Serial.println(rb);leftThreshold=(lw+lb)/2;rightThreshold=(rw+rb)/2;Serial.println("Calibration done!");}\n\n`;}
+  c+=`void setup(){Serial.begin(9600);pinMode(PIN_LEFT,INPUT);pinMode(PIN_RIGHT,INPUT);servoLeft.attach(PIN_SERVO_LEFT);servoRight.attach(PIN_SERVO_RIGHT);servoLeft.writeMicroseconds(SERVO_STOP);servoRight.writeMicroseconds(SERVO_STOP);`;
+  if(isAn)c+=`calibrate();`;
+  c+=`Serial.println("Starting in ${v('startDelay')}s — place on track!");delay(${sd});Serial.println("GO!");`;
+  if(isPID)c+=`lastTime=millis();`;
+  c+=`}\n\nvoid loop(){\n`;
+  if(isAn){c+=`  int leftVal=analogRead(PIN_LEFT);\n  int rightVal=analogRead(PIN_RIGHT);\n  bool leftLine=(leftVal>leftThreshold);\n  bool rightLine=(rightVal>rightThreshold);\n\n`;}
+  else{c+=`  bool leftLine=(digitalRead(PIN_LEFT)==${lv});\n  bool rightLine=(digitalRead(PIN_RIGHT)==${lv});\n\n`;}
+  c+=`  if(!leftLine&&!rightLine){\n    servoLeft.writeMicroseconds(SERVO_STOP);\n    servoRight.writeMicroseconds(SERVO_STOP);\n`;
+  if(isPID)c+=`    integral=0;lastError=0;\n`;
+  if(state.serial)c+=`    Serial.println("** STOPPED — LOST **");\n`;
+  if(state.lost==='spin')c+=`    int sp=(lastError>0)?baseSpeed:-baseSpeed;\n    servoLeft.writeMicroseconds(SERVO_STOP+sp);\n    servoRight.writeMicroseconds(SERVO_STOP-sp);\n`;
+  c+=`    delay(10);return;\n  }\n\n`;
+  if(isPID){
+    if(isAn){c+=`  float lN=map(leftVal,leftMin,leftMax,-100,100)/100.0;\n  float rN=map(rightVal,rightMin,rightMax,-100,100)/100.0;\n  error=constrain(rN-lN,-1.0,1.0);\n\n`;}
+    else{c+=`  if(leftLine&&rightLine) error=0.0;\n  else if(leftLine&&!rightLine) error=-1.0;\n  else error=1.0;\n\n`;}
+    c+=`  unsigned long now=millis();\n  float dt=(now-lastTime)/1000.0;\n  if(dt<=0)dt=0.01;\n  lastTime=now;\n  integral+=error*dt;\n  integral=constrain(integral,-10.0,10.0);\n  derivative=(error-lastError)/dt;\n  pidOutput=(Kp*error)+(Ki*integral)+(Kd*derivative);\n  pidOutput=constrain(pidOutput,-MAX_OFFSET,MAX_OFFSET);\n  lastError=error;\n  int leftSpeed=constrain(baseSpeed-(int)pidOutput,-MAX_OFFSET,MAX_OFFSET);\n  int rightSpeed=constrain(baseSpeed+(int)pidOutput,-MAX_OFFSET,MAX_OFFSET);\n  servoLeft.writeMicroseconds(SERVO_STOP+leftSpeed);\n  servoRight.writeMicroseconds(SERVO_STOP-rightSpeed);\n\n`;
+    if(state.serial)c+=`  Serial.print(leftLine?"LINE ":"white ");Serial.print(rightLine?"| LINE ":"| white ");Serial.print("| Err:");Serial.print(error,2);Serial.print(" PID:");Serial.print(pidOutput,1);Serial.print(" LS:");Serial.print(SERVO_STOP+leftSpeed);Serial.print(" RS:");Serial.print(SERVO_STOP-rightSpeed);Serial.print(" | ");if(leftLine&&rightLine)Serial.println("ON LINE");else if(leftLine)Serial.println("VEER LEFT");else Serial.println("VEER RIGHT");\n\n`;
+  }else{
+    c+=`  if(leftLine&&rightLine){servoLeft.writeMicroseconds(SERVO_STOP+baseSpeed);servoRight.writeMicroseconds(SERVO_STOP-baseSpeed);`;if(state.serial)c+=`Serial.println("FORWARD");`;c+=`}else if(leftLine&&!rightLine){servoLeft.writeMicroseconds(SERVO_STOP-baseSpeed);servoRight.writeMicroseconds(SERVO_STOP-baseSpeed);`;if(state.serial)c+=`Serial.println("TURN LEFT");`;c+=`}else{servoLeft.writeMicroseconds(SERVO_STOP+baseSpeed);servoRight.writeMicroseconds(SERVO_STOP+baseSpeed);`;if(state.serial)c+=`Serial.println("TURN RIGHT");`;c+=`}\n\n`;
+  }
+  c+=`  delay(10);\n}\n`;
+  document.getElementById('codeOutput').textContent=c;
+  document.getElementById('lineCount').textContent=c.split('\n').length;
+  document.getElementById('byteCount').textContent=new Blob([c]).size;
+}
+
+function copyCode(){navigator.clipboard.writeText(document.getElementById('codeOutput').textContent).then(()=>{const btn=document.getElementById('copyBtn');btn.textContent='✓ Copied!';btn.classList.add('copied');setTimeout(()=>{btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`;btn.classList.remove('copied');},2000);});}
+function downloadCode(){const blob=new Blob([document.getElementById('codeOutput').textContent],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`line_follower_${state.mode}.ino`;a.click();}
+
+generate();
+</script>
+</body>
+</html>
